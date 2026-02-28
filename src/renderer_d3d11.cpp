@@ -916,10 +916,9 @@ namespace bgfx { namespace d3d11
 					D3D_FEATURE_LEVEL_11_0,
 					D3D_FEATURE_LEVEL_10_1,
 					D3D_FEATURE_LEVEL_10_0,
-#if BX_PLATFORM_WINRT
 					D3D_FEATURE_LEVEL_9_3,
 					D3D_FEATURE_LEVEL_9_2,
-#endif // BX_PLATFORM_WINRT
+					D3D_FEATURE_LEVEL_9_1,
 				};
 
 				HRESULT hr = S_OK;
