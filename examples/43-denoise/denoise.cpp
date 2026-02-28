@@ -253,7 +253,7 @@ public:
 		init.vendorId = args.m_pciId;
 		init.platformData.nwh  = entry::getNativeWindowHandle(entry::kDefaultWindowHandle);
 		init.platformData.ndt  = entry::getNativeDisplayHandle();
-		init.platformData.type = entry::getNativeWindowHandleType(entry::kDefaultWindowHandle);
+		init.platformData.type = entry::getNativeWindowHandleType();
 		init.resolution.width  = m_width;
 		init.resolution.height = m_height;
 		init.resolution.reset  = m_reset;
@@ -334,6 +334,8 @@ public:
 		m_texelHalf = bgfx::RendererType::Direct3D9 == renderer ? 0.5f : 0.0f;
 
 		imguiCreate();
+
+		m_frameTime.reset();
 	}
 
 	int32_t shutdown() override
@@ -382,6 +384,9 @@ public:
 	{
 		if (!entry::processEvents(m_width, m_height, m_debug, m_reset, &m_mouseState) )
 		{
+			m_frameTime.frame();
+			const float deltaTime = bx::toSeconds<float>(m_frameTime.getDeltaTime() );
+
 			// skip processing when minimized, otherwise crashing
 			if (0 == m_width
 			||  0 == m_height)
@@ -389,13 +394,6 @@ public:
 				return true;
 			}
 
-			// Update frame timer
-			int64_t now = bx::getHPCounter();
-			static int64_t last = now;
-			const int64_t frameTime = now - last;
-			last = now;
-			const double freq = double(bx::getHPFrequency() );
-			const float deltaTime = float(frameTime / freq);
 			const bgfx::Caps* caps = bgfx::getCaps();
 
 			if (m_size[0] != (int32_t)m_width
@@ -534,7 +532,7 @@ public:
 					m_temporaryColor.m_buffer,
 					m_currentColor.m_buffer,
 				};
-				BX_STATIC_ASSERT(BX_COUNTOF(destBuffer) == DENOISE_MAX_PASSES);
+				static_assert(BX_COUNTOF(destBuffer) == DENOISE_MAX_PASSES);
 
 				const uint32_t denoisePasses = bx::min(DENOISE_MAX_PASSES, m_denoisePasses);
 
@@ -1121,6 +1119,8 @@ public:
 	bool    m_enableTxaa          = false;
 	bool    m_applyMitchellFilter = true;
 	bool    m_useTxaaSlow         = false;
+
+	FrameTime m_frameTime;
 };
 
 } // namespace

@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2023 Branimir Karadzic. All rights reserved.
+ * Copyright 2011-2026 Branimir Karadzic. All rights reserved.
  * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
  */
 
@@ -50,7 +50,7 @@ namespace bgfx { namespace d3d12
 		{ D3D_PRIMITIVE_TOPOLOGY_POINTLIST,     D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT,     1, 1, 0 },
 		{ D3D_PRIMITIVE_TOPOLOGY_UNDEFINED,     D3D12_PRIMITIVE_TOPOLOGY_TYPE_UNDEFINED, 0, 0, 0 },
 	};
-	BX_STATIC_ASSERT(Topology::Count == BX_COUNTOF(s_primInfo)-1);
+	static_assert(Topology::Count == BX_COUNTOF(s_primInfo)-1);
 
 	static const uint32_t s_checkMsaa[] =
 	{
@@ -129,6 +129,18 @@ namespace bgfx { namespace d3d12
 		D3D12_CULL_MODE_BACK,
 	};
 
+	static const D3D12_SHADING_RATE s_shadingRate[] =
+	{
+		D3D12_SHADING_RATE_1X1,
+		D3D12_SHADING_RATE_1X2,
+		D3D12_SHADING_RATE_2X1,
+		D3D12_SHADING_RATE_2X2,
+		D3D12_SHADING_RATE_2X4,
+		D3D12_SHADING_RATE_4X2,
+		D3D12_SHADING_RATE_4X4,
+	};
+	static_assert(ShadingRate::Count == BX_COUNTOF(s_shadingRate) );
+
 	static const D3D12_TEXTURE_ADDRESS_MODE s_textureAddress[] =
 	{
 		D3D12_TEXTURE_ADDRESS_MODE_WRAP,
@@ -204,6 +216,10 @@ namespace bgfx { namespace d3d12
 		{ DXGI_FORMAT_UNKNOWN,            DXGI_FORMAT_UNKNOWN,               DXGI_FORMAT_UNKNOWN,           DXGI_FORMAT_UNKNOWN,              D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING                }, // ETC2
 		{ DXGI_FORMAT_UNKNOWN,            DXGI_FORMAT_UNKNOWN,               DXGI_FORMAT_UNKNOWN,           DXGI_FORMAT_UNKNOWN,              D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING                }, // ETC2A
 		{ DXGI_FORMAT_UNKNOWN,            DXGI_FORMAT_UNKNOWN,               DXGI_FORMAT_UNKNOWN,           DXGI_FORMAT_UNKNOWN,              D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING                }, // ETC2A1
+		{ DXGI_FORMAT_UNKNOWN,            DXGI_FORMAT_UNKNOWN,               DXGI_FORMAT_UNKNOWN,           DXGI_FORMAT_UNKNOWN,              D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING                }, // EACR11 UNORM
+		{ DXGI_FORMAT_UNKNOWN,            DXGI_FORMAT_UNKNOWN,               DXGI_FORMAT_UNKNOWN,           DXGI_FORMAT_UNKNOWN,              D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING                }, // EACR11 SNORM
+		{ DXGI_FORMAT_UNKNOWN,            DXGI_FORMAT_UNKNOWN,               DXGI_FORMAT_UNKNOWN,           DXGI_FORMAT_UNKNOWN,              D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING                }, // EACRG11 UNORM
+		{ DXGI_FORMAT_UNKNOWN,            DXGI_FORMAT_UNKNOWN,               DXGI_FORMAT_UNKNOWN,           DXGI_FORMAT_UNKNOWN,              D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING                }, // EACRG11 SNORM
 		{ DXGI_FORMAT_UNKNOWN,            DXGI_FORMAT_UNKNOWN,               DXGI_FORMAT_UNKNOWN,           DXGI_FORMAT_UNKNOWN,              D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING                }, // PTC12
 		{ DXGI_FORMAT_UNKNOWN,            DXGI_FORMAT_UNKNOWN,               DXGI_FORMAT_UNKNOWN,           DXGI_FORMAT_UNKNOWN,              D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING                }, // PTC14
 		{ DXGI_FORMAT_UNKNOWN,            DXGI_FORMAT_UNKNOWN,               DXGI_FORMAT_UNKNOWN,           DXGI_FORMAT_UNKNOWN,              D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING                }, // PTC12A
@@ -296,7 +312,7 @@ namespace bgfx { namespace d3d12
 #undef $B
 #undef $A
 	};
-	BX_STATIC_ASSERT(TextureFormat::Count == BX_COUNTOF(s_textureFormat) );
+	static_assert(TextureFormat::Count == BX_COUNTOF(s_textureFormat) );
 
 	static const D3D12_INPUT_ELEMENT_DESC s_attrib[] =
 	{
@@ -319,7 +335,7 @@ namespace bgfx { namespace d3d12
 		{ "TEXCOORD",     6, DXGI_FORMAT_R32G32_FLOAT,    0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 		{ "TEXCOORD",     7, DXGI_FORMAT_R32G32_FLOAT,    0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 	};
-	BX_STATIC_ASSERT(Attrib::Count == BX_COUNTOF(s_attrib) );
+	static_assert(Attrib::Count == BX_COUNTOF(s_attrib) );
 
 	static const DXGI_FORMAT s_attribType[][4][2] =
 	{
@@ -354,7 +370,7 @@ namespace bgfx { namespace d3d12
 			{ DXGI_FORMAT_R32G32B32A32_FLOAT, DXGI_FORMAT_R32G32B32A32_FLOAT },
 		},
 	};
-	BX_STATIC_ASSERT(AttribType::Count == BX_COUNTOF(s_attribType) );
+	static_assert(AttribType::Count == BX_COUNTOF(s_attribType) );
 
 	static D3D12_INPUT_ELEMENT_DESC* fillVertexLayout(uint8_t _stream, D3D12_INPUT_ELEMENT_DESC* _out, const VertexLayout& _layout)
 	{
@@ -406,37 +422,65 @@ namespace bgfx { namespace d3d12
 	BX_PRAGMA_DIAGNOSTIC_IGNORED_CLANG("-Wunused-const-variable");
 	BX_PRAGMA_DIAGNOSTIC_IGNORED_CLANG("-Wunneeded-internal-declaration");
 
-	static const GUID IID_ID3D12CommandAllocator     = { 0x6102dee4, 0xaf59, 0x4b09, { 0xb9, 0x99, 0xb4, 0x4d, 0x73, 0xf0, 0x9b, 0x24 } };
-	static const GUID IID_ID3D12CommandQueue         = { 0x0ec870a6, 0x5d7e, 0x4c22, { 0x8c, 0xfc, 0x5b, 0xaa, 0xe0, 0x76, 0x16, 0xed } };
-	static const GUID IID_ID3D12CommandSignature     = { 0xc36a797c, 0xec80, 0x4f0a, { 0x89, 0x85, 0xa7, 0xb2, 0x47, 0x50, 0x82, 0xd1 } };
-	static const GUID IID_ID3D12Debug                = { 0x344488b7, 0x6846, 0x474b, { 0xb9, 0x89, 0xf0, 0x27, 0x44, 0x82, 0x45, 0xe0 } };
-	static const GUID IID_ID3D12Debug1               = { 0xaffaa4ca, 0x63fe, 0x4d8e, { 0xb8, 0xad, 0x15, 0x90, 0x00, 0xaf, 0x43, 0x04 } };
-	static const GUID IID_ID3D12DescriptorHeap       = { 0x8efb471d, 0x616c, 0x4f49, { 0x90, 0xf7, 0x12, 0x7b, 0xb7, 0x63, 0xfa, 0x51 } };
-	static const GUID IID_ID3D12Device               = { 0x189819f1, 0x1db6, 0x4b57, { 0xbe, 0x54, 0x18, 0x21, 0x33, 0x9b, 0x85, 0xf7 } };
-	static const GUID IID_ID3D12Device1              = { 0x77acce80, 0x638e, 0x4e65, { 0x88, 0x95, 0xc1, 0xf2, 0x33, 0x86, 0x86, 0x3e } };
-	static const GUID IID_ID3D12Device2              = { 0x30baa41e, 0xb15b, 0x475c, { 0xa0, 0xbb, 0x1a, 0xf5, 0xc5, 0xb6, 0x43, 0x28 } };
-	static const GUID IID_ID3D12Device3              = { 0x81dadc15, 0x2bad, 0x4392, { 0x93, 0xc5, 0x10, 0x13, 0x45, 0xc4, 0xaa, 0x98 } };
-	static const GUID IID_ID3D12Device4              = { 0xe865df17, 0xa9ee, 0x46f9, { 0xa4, 0x63, 0x30, 0x98, 0x31, 0x5a, 0xa2, 0xe5 } };
-	static const GUID IID_ID3D12Device5              = { 0x8b4f173b, 0x2fea, 0x4b80, { 0x8f, 0x58, 0x43, 0x07, 0x19, 0x1a, 0xb9, 0x5d } };
-	static const GUID IID_ID3D12Device6              = { 0xc70b221b, 0x40e4, 0x4a17, { 0x89, 0xaf, 0x02, 0x5a, 0x07, 0x27, 0xa6, 0xdc } };
-	static const GUID IID_ID3D12Device7              = { 0x5c014b53, 0x68a1, 0x4b9b, { 0x8b, 0xd1, 0xdd, 0x60, 0x46, 0xb9, 0x35, 0x8b } };
-	static const GUID IID_ID3D12Device8              = { 0x9218e6bb, 0xf944, 0x4f7e, { 0xa7, 0x5c, 0xb1, 0xb2, 0xc7, 0xb7, 0x01, 0xf3 } };
-	static const GUID IID_ID3D12Fence                = { 0x0a753dcf, 0xc4d8, 0x4b91, { 0xad, 0xf6, 0xbe, 0x5a, 0x60, 0xd9, 0x5a, 0x76 } };
-	static const GUID IID_ID3D12GraphicsCommandList  = { 0x5b160d0f, 0xac1b, 0x4185, { 0x8b, 0xa8, 0xb3, 0xae, 0x42, 0xa5, 0xa4, 0x55 } };
-	static const GUID IID_ID3D12GraphicsCommandList1 = { 0x553103fb, 0x1fe7, 0x4557, { 0xbb, 0x38, 0x94, 0x6d, 0x7d, 0x0e, 0x7c, 0xa7 } };
-	static const GUID IID_ID3D12GraphicsCommandList2 = { 0x38c3e585, 0xff17, 0x412c, { 0x91, 0x50, 0x4f, 0xc6, 0xf9, 0xd7, 0x2a, 0x28 } };
-	static const GUID IID_ID3D12GraphicsCommandList3 = { 0x6fda83a7, 0xb84c, 0x4e38, { 0x9a, 0xc8, 0xc7, 0xbd, 0x22, 0x01, 0x6b, 0x3d } };
-	static const GUID IID_ID3D12GraphicsCommandList4 = { 0x8754318e, 0xd3a9, 0x4541, { 0x98, 0xcf, 0x64, 0x5b, 0x50, 0xdc, 0x48, 0x74 } };
-	static const GUID IID_ID3D12InfoQueue            = { 0x0742a90b, 0xc387, 0x483f, { 0xb9, 0x46, 0x30, 0xa7, 0xe4, 0xe6, 0x14, 0x58 } };
-	static const GUID IID_ID3D12PipelineState        = { 0x765a30f3, 0xf624, 0x4c6f, { 0xa8, 0x28, 0xac, 0xe9, 0x48, 0x62, 0x24, 0x45 } };
-	static const GUID IID_ID3D12Resource             = { 0x696442be, 0xa72e, 0x4059, { 0xbc, 0x79, 0x5b, 0x5c, 0x98, 0x04, 0x0f, 0xad } };
-	static const GUID IID_ID3D12RootSignature        = { 0xc54a6b66, 0x72df, 0x4ee8, { 0x8b, 0xe5, 0xa9, 0x46, 0xa1, 0x42, 0x92, 0x14 } };
-	static const GUID IID_ID3D12QueryHeap            = { 0x0d9658ae, 0xed45, 0x469e, { 0xa6, 0x1d, 0x97, 0x0e, 0xc5, 0x83, 0xca, 0xb4 } };
+	static const GUID IID_ID3D12CommandAllocator      = { 0x6102dee4, 0xaf59, 0x4b09, { 0xb9, 0x99, 0xb4, 0x4d, 0x73, 0xf0, 0x9b, 0x24 } };
+	static const GUID IID_ID3D12CommandQueue          = { 0x0ec870a6, 0x5d7e, 0x4c22, { 0x8c, 0xfc, 0x5b, 0xaa, 0xe0, 0x76, 0x16, 0xed } };
+	static const GUID IID_ID3D12CommandQueue1         = { 0x3a3c3165, 0x0ee7, 0x4b8e, { 0xa0, 0xaf, 0x63, 0x56, 0xb4, 0xc3, 0xbb, 0xb9 } };
+	static const GUID IID_ID3D12CommandSignature      = { 0xc36a797c, 0xec80, 0x4f0a, { 0x89, 0x85, 0xa7, 0xb2, 0x47, 0x50, 0x82, 0xd1 } };
+	static const GUID IID_ID3D12Debug                 = { 0x344488b7, 0x6846, 0x474b, { 0xb9, 0x89, 0xf0, 0x27, 0x44, 0x82, 0x45, 0xe0 } };
+	static const GUID IID_ID3D12Debug1                = { 0xaffaa4ca, 0x63fe, 0x4d8e, { 0xb8, 0xad, 0x15, 0x90, 0x00, 0xaf, 0x43, 0x04 } };
+	static const GUID IID_ID3D12Debug2                = { 0x93a665c4, 0xa3b2, 0x4e5d, { 0xb6, 0x92, 0xa2, 0x6a, 0xe1, 0x4e, 0x33, 0x74 } };
+	static const GUID IID_ID3D12Debug3                = { 0x5cf4e58f, 0xf671, 0x4ff1, { 0xa5, 0x42, 0x36, 0x86, 0xe3, 0xd1, 0x53, 0xd1 } };
+	static const GUID IID_ID3D12Debug4                = { 0x014b816e, 0x9ec5, 0x4a2f, { 0xa8, 0x45, 0xff, 0xbe, 0x44, 0x1c, 0xe1, 0x3a } };
+	static const GUID IID_ID3D12Debug5                = { 0x548d6b12, 0x09fa, 0x40e0, { 0x90, 0x69, 0x5d, 0xcd, 0x58, 0x9a, 0x52, 0xc9 } };
+	static const GUID IID_ID3D12Debug6                = { 0x82a816d6, 0x5d01, 0x4157, { 0x97, 0xd0, 0x49, 0x75, 0x46, 0x3f, 0xd1, 0xed } };
+	static const GUID IID_ID3D12DescriptorHeap        = { 0x8efb471d, 0x616c, 0x4f49, { 0x90, 0xf7, 0x12, 0x7b, 0xb7, 0x63, 0xfa, 0x51 } };
+	static const GUID IID_ID3D12Device                = { 0x189819f1, 0x1db6, 0x4b57, { 0xbe, 0x54, 0x18, 0x21, 0x33, 0x9b, 0x85, 0xf7 } };
+	static const GUID IID_ID3D12Device1               = { 0x77acce80, 0x638e, 0x4e65, { 0x88, 0x95, 0xc1, 0xf2, 0x33, 0x86, 0x86, 0x3e } };
+	static const GUID IID_ID3D12Device2               = { 0x30baa41e, 0xb15b, 0x475c, { 0xa0, 0xbb, 0x1a, 0xf5, 0xc5, 0xb6, 0x43, 0x28 } };
+	static const GUID IID_ID3D12Device3               = { 0x81dadc15, 0x2bad, 0x4392, { 0x93, 0xc5, 0x10, 0x13, 0x45, 0xc4, 0xaa, 0x98 } };
+	static const GUID IID_ID3D12Device4               = { 0xe865df17, 0xa9ee, 0x46f9, { 0xa4, 0x63, 0x30, 0x98, 0x31, 0x5a, 0xa2, 0xe5 } };
+	static const GUID IID_ID3D12Device5               = { 0x8b4f173b, 0x2fea, 0x4b80, { 0x8f, 0x58, 0x43, 0x07, 0x19, 0x1a, 0xb9, 0x5d } };
+	static const GUID IID_ID3D12Device6               = { 0xc70b221b, 0x40e4, 0x4a17, { 0x89, 0xaf, 0x02, 0x5a, 0x07, 0x27, 0xa6, 0xdc } };
+	static const GUID IID_ID3D12Device7               = { 0x5c014b53, 0x68a1, 0x4b9b, { 0x8b, 0xd1, 0xdd, 0x60, 0x46, 0xb9, 0x35, 0x8b } };
+	static const GUID IID_ID3D12Device8               = { 0x9218e6bb, 0xf944, 0x4f7e, { 0xa7, 0x5c, 0xb1, 0xb2, 0xc7, 0xb7, 0x01, 0xf3 } };
+	static const GUID IID_ID3D12Device9               = { 0x4c80e962, 0xf032, 0x4f60, { 0xbc, 0x9e, 0xeb, 0xc2, 0xcf, 0xa1, 0xd8, 0x3c } };
+	static const GUID IID_ID3D12Device10              = { 0x517f8718, 0xaa66, 0x49f9, { 0xb0, 0x2b, 0xa7, 0xab, 0x89, 0xc0, 0x60, 0x31 } };
+	static const GUID IID_ID3D12Device11              = { 0x5405c344, 0xd457, 0x444e, { 0xb4, 0xdd, 0x23, 0x66, 0xe4, 0x5a, 0xee, 0x39 } };
+	static const GUID IID_ID3D12Device12              = { 0x5af5c532, 0x4c91, 0x4cd0, { 0xb5, 0x41, 0x15, 0xa4, 0x05, 0x39, 0x5f, 0xc5 } };
+	static const GUID IID_ID3D12Device13              = { 0x14eecffc, 0x4df8, 0x40f7, { 0xa1, 0x18, 0x5c, 0x81, 0x6f, 0x45, 0x69, 0x5e } };
+	static const GUID IID_ID3D12Device14              = { 0x5f6e592d, 0xd895, 0x44c2, { 0x8e, 0x4a, 0x88, 0xad, 0x49, 0x26, 0xd3, 0x23 } };
+	static const GUID IID_ID3D12Fence                 = { 0x0a753dcf, 0xc4d8, 0x4b91, { 0xad, 0xf6, 0xbe, 0x5a, 0x60, 0xd9, 0x5a, 0x76 } };
+	static const GUID IID_ID3D12Fence1                = { 0x433685fe, 0xe22b, 0x4ca0, { 0xa8, 0xdb, 0xb5, 0xb4, 0xf4, 0xdd, 0x0e, 0x4a } };
+	static const GUID IID_ID3D12GraphicsCommandList   = { 0x5b160d0f, 0xac1b, 0x4185, { 0x8b, 0xa8, 0xb3, 0xae, 0x42, 0xa5, 0xa4, 0x55 } };
+	static const GUID IID_ID3D12GraphicsCommandList1  = { 0x553103fb, 0x1fe7, 0x4557, { 0xbb, 0x38, 0x94, 0x6d, 0x7d, 0x0e, 0x7c, 0xa7 } };
+	static const GUID IID_ID3D12GraphicsCommandList2  = { 0x38c3e585, 0xff17, 0x412c, { 0x91, 0x50, 0x4f, 0xc6, 0xf9, 0xd7, 0x2a, 0x28 } };
+	static const GUID IID_ID3D12GraphicsCommandList3  = { 0x6fda83a7, 0xb84c, 0x4e38, { 0x9a, 0xc8, 0xc7, 0xbd, 0x22, 0x01, 0x6b, 0x3d } };
+	static const GUID IID_ID3D12GraphicsCommandList4  = { 0x8754318e, 0xd3a9, 0x4541, { 0x98, 0xcf, 0x64, 0x5b, 0x50, 0xdc, 0x48, 0x74 } };
+	static const GUID IID_ID3D12GraphicsCommandList5  = { 0x55050859, 0x4024, 0x474c, { 0x87, 0xf5, 0x64, 0x72, 0xea, 0xee, 0x44, 0xea } };
+	static const GUID IID_ID3D12GraphicsCommandList6  = { 0xc3827890, 0xe548, 0x4cfa, { 0x96, 0xcf, 0x56, 0x89, 0xa9, 0x37, 0x0f, 0x80 } };
+	static const GUID IID_ID3D12GraphicsCommandList7  = { 0xdd171223, 0x8b61, 0x4769, { 0x90, 0xe3, 0x16, 0x0c, 0xcd, 0xe4, 0xe2, 0xc1 } };
+	static const GUID IID_ID3D12GraphicsCommandList8  = { 0xee936ef9, 0x599d, 0x4d28, { 0x93, 0x8e, 0x23, 0xc4, 0xad, 0x05, 0xce, 0x51 } };
+	static const GUID IID_ID3D12GraphicsCommandList9  = { 0x34ed2808, 0xffe6, 0x4c2b, { 0xb1, 0x1a, 0xca, 0xbd, 0x2b, 0x0c, 0x59, 0xe1 } };
+	static const GUID IID_ID3D12GraphicsCommandList10 = { 0x7013c015, 0xd161, 0x4b63, { 0xa0, 0x8c, 0x23, 0x85, 0x52, 0xdd, 0x8a, 0xcc } };
+	static const GUID IID_ID3D12InfoQueue             = { 0x0742a90b, 0xc387, 0x483f, { 0xb9, 0x46, 0x30, 0xa7, 0xe4, 0xe6, 0x14, 0x58 } };
+	static const GUID IID_ID3D12PipelineState         = { 0x765a30f3, 0xf624, 0x4c6f, { 0xa8, 0x28, 0xac, 0xe9, 0x48, 0x62, 0x24, 0x45 } };
+	static const GUID IID_ID3D12PipelineState1        = { 0x5646804c, 0x9638, 0x48f7, { 0x91, 0x82, 0xb3, 0xee, 0x5a, 0x6b, 0x60, 0xfb } };
+	static const GUID IID_ID3D12Resource              = { 0x696442be, 0xa72e, 0x4059, { 0xbc, 0x79, 0x5b, 0x5c, 0x98, 0x04, 0x0f, 0xad } };
+	static const GUID IID_ID3D12Resource1             = { 0x9d5e227a, 0x4430, 0x4161, { 0x88, 0xb3, 0x3e, 0xca, 0x6b, 0xb1, 0x6e, 0x19 } };
+	static const GUID IID_ID3D12Resource2             = { 0xbe36ec3b, 0xea85, 0x4aeb, { 0xa4, 0x5a, 0xe9, 0xd7, 0x64, 0x04, 0xa4, 0x95 } };
+	static const GUID IID_ID3D12RootSignature         = { 0xc54a6b66, 0x72df, 0x4ee8, { 0x8b, 0xe5, 0xa9, 0x46, 0xa1, 0x42, 0x92, 0x14 } };
+	static const GUID IID_ID3D12QueryHeap             = { 0x0d9658ae, 0xed45, 0x469e, { 0xa6, 0x1d, 0x97, 0x0e, 0xc5, 0x83, 0xca, 0xb4 } };
 
 	BX_PRAGMA_DIAGNOSTIC_POP();
 
 	static const GUID s_d3dDeviceIIDs[] =
 	{
+		IID_ID3D12Device14,
+		IID_ID3D12Device13,
+		IID_ID3D12Device12,
+		IID_ID3D12Device11,
+		IID_ID3D12Device10,
+		IID_ID3D12Device9,
 		IID_ID3D12Device8,
 		IID_ID3D12Device7,
 		IID_ID3D12Device6,
@@ -470,17 +514,17 @@ namespace bgfx { namespace d3d12
 		{ { D3D12_HEAP_TYPE_UPLOAD,   D3D12_CPU_PAGE_PROPERTY_UNKNOWN, D3D12_MEMORY_POOL_UNKNOWN, 0, 0 }, D3D12_RESOURCE_STATE_GENERIC_READ },
 		{ { D3D12_HEAP_TYPE_READBACK, D3D12_CPU_PAGE_PROPERTY_UNKNOWN, D3D12_MEMORY_POOL_UNKNOWN, 0, 0 }, D3D12_RESOURCE_STATE_COPY_DEST    },
 	};
-	BX_STATIC_ASSERT(BX_COUNTOF(s_heapProperties) == HeapProperty::Count);
+	static_assert(BX_COUNTOF(s_heapProperties) == HeapProperty::Count);
 
 	static inline D3D12_HEAP_PROPERTIES ID3D12DeviceGetCustomHeapProperties(ID3D12Device *device, uint32_t nodeMask, D3D12_HEAP_TYPE heapType)
 	{
-#if BX_COMPILER_MSVC
+#if BX_COMPILER_MSVC || (BX_COMPILER_CLANG && defined(_MSC_VER) )
 		return device->GetCustomHeapProperties(nodeMask, heapType);
 #else
 		D3D12_HEAP_PROPERTIES ret;
 		device->GetCustomHeapProperties(&ret, nodeMask, heapType);
 		return ret;
-#endif // BX_COMPILER_MSVC
+#endif // BX_COMPILER_MSVC || (BX_COMPILER_CLANG && defined(_MSC_VER) )
 	}
 
 	static void initHeapProperties(ID3D12Device* _device, D3D12_HEAP_PROPERTIES& _properties)
@@ -503,12 +547,12 @@ namespace bgfx { namespace d3d12
 #endif // BX_PLATFORM_WINDOWS
 	}
 
-	ID3D12Resource* createCommittedResource(ID3D12Device* _device, HeapProperty::Enum _heapProperty, const D3D12_RESOURCE_DESC* _resourceDesc, const D3D12_CLEAR_VALUE* _clearValue, bool _memSet = false)
+	ID3D12Resource* createCommittedResource(ID3D12Device* _device, HeapProperty::Enum _heapProperty, const D3D12_RESOURCE_DESC* _resourceDesc, const D3D12_CLEAR_VALUE* _clearValue, bool _memSet = false, D3D12_HEAP_FLAGS _heapFlags = D3D12_HEAP_FLAG_NONE)
 	{
 		const HeapProperty& heapProperty = s_heapProperties[_heapProperty];
 		ID3D12Resource* resource;
 		DX_CHECK(_device->CreateCommittedResource(&heapProperty.m_properties
-			, D3D12_HEAP_FLAG_NONE
+			, _heapFlags
 			, _resourceDesc
 			, heapProperty.m_state
 			, _clearValue
@@ -525,11 +569,11 @@ namespace bgfx { namespace d3d12
 			void* ptr;
 			DX_CHECK(resource->Map(0, NULL, &ptr) );
 			D3D12_RESOURCE_ALLOCATION_INFO rai;
-#if BX_COMPILER_MSVC
+#if BX_COMPILER_MSVC || (BX_COMPILER_CLANG && defined(_MSC_VER) )
 			rai = _device->GetResourceAllocationInfo(1, 1, _resourceDesc);
 #else
 			_device->GetResourceAllocationInfo(&rai, 1, 1, _resourceDesc);
-#endif // BX_COMPILER_MSVC
+#endif // BX_COMPILER_MSVC || (BX_COMPILER_CLANG && defined(_MSC_VER) )
 			bx::memSet(ptr, 0, size_t(rai.SizeInBytes) );
 			resource->Unmap(0, NULL);
 		}
@@ -537,7 +581,7 @@ namespace bgfx { namespace d3d12
 		return resource;
 	}
 
-	ID3D12Resource* createCommittedResource(ID3D12Device* _device, HeapProperty::Enum _heapProperty, uint64_t _size, D3D12_RESOURCE_FLAGS _flags = D3D12_RESOURCE_FLAG_NONE)
+	ID3D12Resource* createCommittedResource(ID3D12Device* _device, HeapProperty::Enum _heapProperty, uint64_t _size, D3D12_RESOURCE_FLAGS _flags = D3D12_RESOURCE_FLAG_NONE, D3D12_HEAP_FLAGS _heapFlags = D3D12_HEAP_FLAG_NONE)
 	{
 		D3D12_RESOURCE_DESC resourceDesc = {};
 		resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
@@ -552,7 +596,7 @@ namespace bgfx { namespace d3d12
 		resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 		resourceDesc.Flags  = _flags;
 
-		return createCommittedResource(_device, _heapProperty, &resourceDesc, NULL);
+		return createCommittedResource(_device, _heapProperty, &resourceDesc, NULL, false, _heapFlags);
 	}
 
 	inline bool isLost(HRESULT _hr)
@@ -606,11 +650,13 @@ namespace bgfx { namespace d3d12
 			va_end(argList);
 			temp[size] = '\0';
 
-			wchar_t* wtemp = (wchar_t*)alloca( (size+1)*2);
+			wchar_t* wtemp = (wchar_t*)BX_STACK_ALLOC( (size+1)*2);
 			mbstowcs(wtemp, temp, size+1);
 			_object->SetName(wtemp);
 		}
 	}
+
+	typedef HRESULT (WINAPI* PFN_D3D12_ENABLE_EXPERIMENTAL_FEATURES)(uint32_t _numFeatures, const IID* _iids, void* _configurationStructs, uint32_t* _configurationStructSizes);
 
 #if USE_D3D12_DYNAMIC_LIB
 	static PFN_D3D12_ENABLE_EXPERIMENTAL_FEATURES D3D12EnableExperimentalFeatures;
@@ -626,48 +672,56 @@ namespace bgfx { namespace d3d12
 
 	inline D3D12_CPU_DESCRIPTOR_HANDLE getCPUHandleHeapStart(ID3D12DescriptorHeap* _heap)
 	{
-#if BX_COMPILER_MSVC
+#if BX_COMPILER_MSVC || (BX_COMPILER_CLANG && defined(_MSC_VER) )
 		return _heap->GetCPUDescriptorHandleForHeapStart();
 #else
 		D3D12_CPU_DESCRIPTOR_HANDLE handle;
 		_heap->GetCPUDescriptorHandleForHeapStart(&handle);
 		return handle;
-#endif // BX_COMPILER_MSVC
+#endif // BX_COMPILER_MSVC || (BX_COMPILER_CLANG && defined(_MSC_VER) )
 	}
 
 	inline D3D12_GPU_DESCRIPTOR_HANDLE getGPUHandleHeapStart(ID3D12DescriptorHeap* _heap)
 	{
-#if BX_COMPILER_MSVC
+#if BX_COMPILER_MSVC || (BX_COMPILER_CLANG && defined(_MSC_VER) )
 		return _heap->GetGPUDescriptorHandleForHeapStart();
 #else
 		D3D12_GPU_DESCRIPTOR_HANDLE handle;
 		_heap->GetGPUDescriptorHandleForHeapStart(&handle);
 		return handle;
-#endif // BX_COMPILER_MSVC
+#endif // BX_COMPILER_MSVC || (BX_COMPILER_CLANG && defined(_MSC_VER) )
 	}
 
 	inline D3D12_RESOURCE_DESC getResourceDesc(ID3D12Resource* _resource)
 	{
-#if BX_COMPILER_MSVC
+#if BX_COMPILER_MSVC || (BX_COMPILER_CLANG && defined(_MSC_VER) )
 		return _resource->GetDesc();
 #else
 		D3D12_RESOURCE_DESC desc;
 		_resource->GetDesc(&desc);
 		return desc;
-#endif // BX_COMPILER_MSVC
+#endif // BX_COMPILER_MSVC || (BX_COMPILER_CLANG && defined(_MSC_VER) )
 	}
 
 #if BGFX_CONFIG_DEBUG_ANNOTATION && (BX_PLATFORM_WINDOWS || BX_PLATFORM_WINRT)
-	static PIXEventsThreadInfo s_pixEventsThreadInfo;
 
-	PIXEventsThreadInfo* WINAPI stubPIXGetThreadInfo()
+	struct StubPIXEventsThreadInfo
 	{
-		return &s_pixEventsThreadInfo;
+		void* block;
+		void* biasedLimit;
+		void* destination;
+	};
+
+	static StubPIXEventsThreadInfo s_pixEventsThreadInfo = {};
+
+	static struct PIXEventsThreadInfo* WINAPI stubPIXGetThreadInfo()
+	{
+		return (struct PIXEventsThreadInfo*)& s_pixEventsThreadInfo;
 	}
 
-	uint64_t WINAPI stubPIXEventsReplaceBlock(bool _getEarliestTime)
+	uint64_t WINAPI stubPIXEventsReplaceBlock(PIXEventsThreadInfo* _threadInfo, bool _getEarliestTime)
 	{
-		BX_UNUSED(_getEarliestTime);
+		BX_UNUSED(_threadInfo, _getEarliestTime);
 		return 0;
 	}
 #endif // BGFX_CONFIG_DEBUG_ANNOTATION && (BX_PLATFORM_WINDOWS || BX_PLATFORM_WINRT)
@@ -680,6 +734,7 @@ namespace bgfx { namespace d3d12
 			, m_winPixEvent(NULL)
 			, m_featureLevel(D3D_FEATURE_LEVEL(0) )
 			, m_swapChain(NULL)
+			, m_backBufferDepthStencil(NULL)
 			, m_wireframe(false)
 			, m_lost(false)
 			, m_maxAnisotropy(1)
@@ -687,6 +742,7 @@ namespace bgfx { namespace d3d12
 			, m_backBufferColorIdx(0)
 			, m_rtMsaa(false)
 			, m_directAccessSupport(false)
+			, m_variableRateShadingSupport(false)
 		{
 		}
 
@@ -735,9 +791,13 @@ namespace bgfx { namespace d3d12
 				m_renderDocDll = loadRenderDoc();
 			}
 
-			setGraphicsDebuggerPresent(NULL != m_renderDocDll || NULL != m_winPixEvent);
+			setGraphicsDebuggerPresent(false
+				|| NULL != m_renderDocDll
+				|| NULL != m_winPixEvent
+				|| NULL != findModule("Nvda.Graphics.Interception.dll")
+				);
 
-			m_fbh.idx = kInvalidHandle;
+			m_fbh = BGFX_INVALID_HANDLE;
 			bx::memSet(m_uniforms, 0, sizeof(m_uniforms) );
 			bx::memSet(&m_resolution, 0, sizeof(m_resolution) );
 
@@ -815,6 +875,14 @@ namespace bgfx { namespace d3d12
 
 			HRESULT hr;
 
+			if (NULL != g_platformData.context)
+			{
+				m_device = (ID3D12Device*)g_platformData.context;
+
+				m_device->AddRef();
+				hr = S_OK;
+			}
+			else
 			{
 #if BX_PLATFORM_LINUX || BX_PLATFORM_WINDOWS || BX_PLATFORM_WINRT
 				if (_init.debug
@@ -834,18 +902,25 @@ namespace bgfx { namespace d3d12
 								ID3D12Debug1* debug1;
 								hr = debug0->QueryInterface(IID_ID3D12Debug1, (void**)&debug1);
 
-								if (SUCCEEDED(hr))
+								if (SUCCEEDED(hr) )
 								{
-//									debug1->SetEnableGPUBasedValidation(true);
-
 									// https://discordapp.com/channels/590611987420020747/593519198995742733/703642988345032804
 									// D3D12 Bug Number: 26131261
 									// There is a bug in the D3D12 validation that causes example-21 to fail when using UAV
-									// Setting this function below to false avoids the bug
-									debug1->SetEnableSynchronizedCommandQueueValidation(false);
-								}
+									// Setting SetEnableSynchronizedCommandQueueValidation below to false avoids the bug
+									// It was fixed in (probably) the first windows 11 sdk, 22000
+									// However, the fix causes any dx12 context with validation to break if this is set to false, so we can't do that anymore
+									if (windowsVersionIs(Condition::GreaterEqual, 0x0A00, 22000) )
+									{
+										debug1->SetEnableGPUBasedValidation(true);
+									}
+									else
+									{
+										debug1->SetEnableSynchronizedCommandQueueValidation(false);
+									}
 
-								DX_RELEASE(debug1, 1);
+									DX_RELEASE(debug1, 1);
+								}
 							}
 #endif // BX_PLATFORM_WINDOWS
 						}
@@ -911,12 +986,12 @@ namespace bgfx { namespace d3d12
 					m_device->SetDebugErrorFilterX(0x8EC9B15C, D3D12XBOX_DEBUG_FILTER_FLAG_DISABLE_OUTPUT);
 				}
 #endif // BX_PLATFORM_WINDOWS || BX_PLATFORM_WINRT
-			}
 
-			if (FAILED(hr) )
-			{
-				BX_TRACE("Init error: Unable to create Direct3D12 device.");
-				goto error;
+				if (FAILED(hr) )
+				{
+					BX_TRACE("Init error: Unable to create Direct3D12 device.");
+					goto error;
+				}
 			}
 
 #if !BX_PLATFORM_LINUX
@@ -937,6 +1012,8 @@ namespace bgfx { namespace d3d12
 					}
 				}
 			}
+
+			BX_TRACE("Device interface version IID_ID3D12Device%d.", m_deviceInterfaceVersion);
 
 #if !BX_PLATFORM_LINUX
 			if (BGFX_PCI_ID_NVIDIA != m_dxgi.m_adapterDesc.VendorId)
@@ -975,7 +1052,7 @@ namespace bgfx { namespace d3d12
 			BX_TRACE("\tCrossNodeSharingTier %d", m_options.CrossNodeSharingTier);
 			BX_TRACE("\tResourceHeapTier %d", m_options.ResourceHeapTier);
 
-			for (D3D12_FEATURE_DATA_D3D12_OPTIONS1 options1; SUCCEEDED(m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS1, &options1, sizeof(options1)));)
+			for (D3D12_FEATURE_DATA_D3D12_OPTIONS1 options1; SUCCEEDED(m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS1, &options1, sizeof(options1) ) );)
 			{
 				BX_TRACE("D3D12 options 1:");
 				BX_TRACE("\tWaveOps %d", options1.WaveOps);
@@ -987,7 +1064,7 @@ namespace bgfx { namespace d3d12
 				break;
 			}
 
-			for (D3D12_FEATURE_DATA_D3D12_OPTIONS2 options2; SUCCEEDED(m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS2, &options2, sizeof(options2)));)
+			for (D3D12_FEATURE_DATA_D3D12_OPTIONS2 options2; SUCCEEDED(m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS2, &options2, sizeof(options2) ) );)
 			{
 				BX_TRACE("D3D12 options 2:");
 				BX_TRACE("\tCopyQueueTimestampQueriesSupported %d", options2.DepthBoundsTestSupported);
@@ -995,7 +1072,7 @@ namespace bgfx { namespace d3d12
 				break;
 			}
 
-			for (D3D12_FEATURE_DATA_D3D12_OPTIONS3 options3; SUCCEEDED(m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS3, &options3, sizeof(options3)));)
+			for (D3D12_FEATURE_DATA_D3D12_OPTIONS3 options3; SUCCEEDED(m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS3, &options3, sizeof(options3) ) );)
 			{
 				BX_TRACE("D3D12 options 3:");
 				BX_TRACE("\tCopyQueueTimestampQueriesSupported %d", options3.CopyQueueTimestampQueriesSupported);
@@ -1006,7 +1083,7 @@ namespace bgfx { namespace d3d12
 				break;
 			}
 
-			for (D3D12_FEATURE_DATA_D3D12_OPTIONS4 options4; SUCCEEDED(m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS4, &options4, sizeof(options4)));)
+			for (D3D12_FEATURE_DATA_D3D12_OPTIONS4 options4; SUCCEEDED(m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS4, &options4, sizeof(options4) ) );)
 			{
 				BX_TRACE("D3D12 options 4:");
 				BX_TRACE("\tMSAA64KBAlignedTextureSupported %d", options4.MSAA64KBAlignedTextureSupported);
@@ -1024,18 +1101,21 @@ namespace bgfx { namespace d3d12
 				break;
 			}
 
-			for (D3D12_FEATURE_DATA_D3D12_OPTIONS6 options6; SUCCEEDED(m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS6, &options6, sizeof(options6)));)
+			for (D3D12_FEATURE_DATA_D3D12_OPTIONS6 options6; SUCCEEDED(m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS6, &options6, sizeof(options6) ) );)
 			{
 				BX_TRACE("D3D12 options 6:");
 				BX_TRACE("\tAdditionalShadingRatesSupported %d", options6.AdditionalShadingRatesSupported);
 				BX_TRACE("\tPerPrimitiveShadingRateSupportedWithViewportIndexing %d", options6.PerPrimitiveShadingRateSupportedWithViewportIndexing);
 				BX_TRACE("\tVariableShadingRateTier %d", options6.VariableShadingRateTier);
+
+				m_variableRateShadingSupport = D3D12_VARIABLE_SHADING_RATE_TIER_NOT_SUPPORTED != options6.VariableShadingRateTier;
+
 				BX_TRACE("\tShadingRateImageTileSize %d", options6.ShadingRateImageTileSize);
 				BX_TRACE("\tBackgroundProcessingSupported %d", options6.BackgroundProcessingSupported);
 				break;
 			}
 
-			for (D3D12_FEATURE_DATA_D3D12_OPTIONS7 options7; SUCCEEDED(m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS7, &options7, sizeof(options7)));)
+			for (D3D12_FEATURE_DATA_D3D12_OPTIONS7 options7; SUCCEEDED(m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS7, &options7, sizeof(options7) ) );)
 			{
 				BX_TRACE("D3D12 options 7:");
 				BX_TRACE("\tMeshShaderTier %d", options7.MeshShaderTier);
@@ -1043,14 +1123,14 @@ namespace bgfx { namespace d3d12
 				break;
 			}
 
-			for (D3D12_FEATURE_DATA_D3D12_OPTIONS8 options8; SUCCEEDED(m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS8, &options8, sizeof(options8)));)
+			for (D3D12_FEATURE_DATA_D3D12_OPTIONS8 options8; SUCCEEDED(m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS8, &options8, sizeof(options8) ) );)
 			{
 				BX_TRACE("D3D12 options 8:");
 				BX_TRACE("\tUnalignedBlockTexturesSupported %d", options8.UnalignedBlockTexturesSupported);
 				break;
 			}
 
-			for (D3D12_FEATURE_DATA_D3D12_OPTIONS9 options9; SUCCEEDED(m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS9, &options9, sizeof(options9)));)
+			for (D3D12_FEATURE_DATA_D3D12_OPTIONS9 options9; SUCCEEDED(m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS9, &options9, sizeof(options9) ) );)
 			{
 				BX_TRACE("D3D12 options 9:");
 				BX_TRACE("\tMeshShaderPipelineStatsSupported %d", options9.MeshShaderPipelineStatsSupported);
@@ -1062,7 +1142,7 @@ namespace bgfx { namespace d3d12
 				break;
 			}
 
-			for (D3D12_FEATURE_DATA_D3D12_OPTIONS10 options10; SUCCEEDED(m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS10, &options10, sizeof(options10)));)
+			for (D3D12_FEATURE_DATA_D3D12_OPTIONS10 options10; SUCCEEDED(m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS10, &options10, sizeof(options10) ) );)
 			{
 				BX_TRACE("D3D12 options 10:");
 				BX_TRACE("\tVariableRateShadingSumCombinerSupported %d", options10.VariableRateShadingSumCombinerSupported);
@@ -1070,14 +1150,14 @@ namespace bgfx { namespace d3d12
 				break;
 			}
 
-			for (D3D12_FEATURE_DATA_D3D12_OPTIONS11 options11; SUCCEEDED(m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS11, &options11, sizeof(options11)));)
+			for (D3D12_FEATURE_DATA_D3D12_OPTIONS11 options11; SUCCEEDED(m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS11, &options11, sizeof(options11) ) );)
 			{
 				BX_TRACE("D3D12 options 11:");
 				BX_TRACE("\tAtomicInt64OnDescriptorHeapResourceSupported %d", options11.AtomicInt64OnDescriptorHeapResourceSupported);
 				break;
 			}
 
-			for (D3D12_FEATURE_DATA_D3D12_OPTIONS12 options12; SUCCEEDED(m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS12, &options12, sizeof(options12)));)
+			for (D3D12_FEATURE_DATA_D3D12_OPTIONS12 options12; SUCCEEDED(m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS12, &options12, sizeof(options12) ) );)
 			{
 				BX_TRACE("D3D12 options 12:");
 				BX_TRACE("\tMSPrimitivesPipelineStatisticIncludesCulledPrimitives %d", options12.MSPrimitivesPipelineStatisticIncludesCulledPrimitives);
@@ -1086,7 +1166,7 @@ namespace bgfx { namespace d3d12
 				break;
 			}
 
-			for (D3D12_FEATURE_DATA_D3D12_OPTIONS13 options13; SUCCEEDED(m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS12, &options13, sizeof(options13)));)
+			for (D3D12_FEATURE_DATA_D3D12_OPTIONS13 options13; SUCCEEDED(m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS13, &options13, sizeof(options13) ) );)
 			{
 				BX_TRACE("D3D12 options 13:");
 				BX_TRACE("\tUnrestrictedBufferTextureCopyPitchSupported %d", options13.UnrestrictedBufferTextureCopyPitchSupported);
@@ -1098,7 +1178,7 @@ namespace bgfx { namespace d3d12
 				break;
 			}
 
-			for (D3D12_FEATURE_DATA_D3D12_OPTIONS14 options14; SUCCEEDED(m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS12, &options14, sizeof(options14)));)
+			for (D3D12_FEATURE_DATA_D3D12_OPTIONS14 options14; SUCCEEDED(m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS14, &options14, sizeof(options14) ) );)
 			{
 				BX_TRACE("D3D12 options 14:");
 				BX_TRACE("\tAdvancedTextureOpsSupported %d", options14.AdvancedTextureOpsSupported);
@@ -1107,7 +1187,7 @@ namespace bgfx { namespace d3d12
 				break;
 			}
 
-			for (D3D12_FEATURE_DATA_D3D12_OPTIONS15 options15; SUCCEEDED(m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS12, &options15, sizeof(options15)));)
+			for (D3D12_FEATURE_DATA_D3D12_OPTIONS15 options15; SUCCEEDED(m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS15, &options15, sizeof(options15) ) );)
 			{
 				BX_TRACE("D3D12 options 15:");
 				BX_TRACE("\tTriangleFanSupported %d", options15.TriangleFanSupported);
@@ -1115,9 +1195,66 @@ namespace bgfx { namespace d3d12
 				break;
 			}
 
+			for (D3D12_FEATURE_DATA_D3D12_OPTIONS16 options16; SUCCEEDED(m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS16, &options16, sizeof(options16) ) );)
+			{
+				BX_TRACE("D3D12 options 16:");
+				BX_TRACE("\tDynamicDepthBiasSupported %d", options16.DynamicDepthBiasSupported);
+				BX_TRACE("\tGPUUploadHeapSupported %d", options16.GPUUploadHeapSupported);
+				break;
+			}
+
+			for (D3D12_FEATURE_DATA_D3D12_OPTIONS17 options17; SUCCEEDED(m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS17, &options17, sizeof(options17) ) );)
+			{
+				BX_TRACE("D3D12 options 17:");
+				BX_TRACE("\tNonNormalizedCoordinateSamplersSupported %d", options17.NonNormalizedCoordinateSamplersSupported);
+				BX_TRACE("\tManualWriteTrackingResourceSupported %d", options17.ManualWriteTrackingResourceSupported);
+				break;
+			}
+
+			for (D3D12_FEATURE_DATA_D3D12_OPTIONS18 options18; SUCCEEDED(m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS18, &options18, sizeof(options18) ) );)
+			{
+				BX_TRACE("D3D12 options 18:");
+				BX_TRACE("\tRenderPassesValid %d", options18.RenderPassesValid);
+				break;
+			}
+
+			for (D3D12_FEATURE_DATA_D3D12_OPTIONS19 options19; SUCCEEDED(m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS19, &options19, sizeof(options19) ) );)
+			{
+				BX_TRACE("D3D12 options 19:");
+				BX_TRACE("\tMismatchingOutputDimensionsSupported %d", options19.MismatchingOutputDimensionsSupported);
+				BX_TRACE("\tSupportedSampleCountsWithNoOutputs %d", options19.SupportedSampleCountsWithNoOutputs);
+				BX_TRACE("\tPointSamplingAddressesNeverRoundUp %d", options19.PointSamplingAddressesNeverRoundUp);
+				BX_TRACE("\tRasterizerDesc2Supported %d", options19.RasterizerDesc2Supported);
+				BX_TRACE("\tNarrowQuadrilateralLinesSupported %d", options19.NarrowQuadrilateralLinesSupported);
+				BX_TRACE("\tAnisoFilterWithPointMipSupported %d", options19.AnisoFilterWithPointMipSupported);
+				BX_TRACE("\tMaxSamplerDescriptorHeapSize %d", options19.MaxSamplerDescriptorHeapSize);
+				BX_TRACE("\tMaxSamplerDescriptorHeapSizeWithStaticSamplers %d", options19.MaxSamplerDescriptorHeapSizeWithStaticSamplers);
+				BX_TRACE("\tMaxViewDescriptorHeapSize %d", options19.MaxViewDescriptorHeapSize);
+				BX_TRACE("\tComputeOnlyCustomHeapSupported %d", options19.ComputeOnlyCustomHeapSupported);
+				break;
+			}
+
+			for (D3D12_FEATURE_DATA_D3D12_OPTIONS20 options20; SUCCEEDED(m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS20, &options20, sizeof(options20) ) );)
+			{
+				BX_TRACE("D3D12 options 20:");
+				BX_TRACE("\tComputeOnlyWriteWatchSupported %d", options20.ComputeOnlyWriteWatchSupported);
+				BX_TRACE("\tRecreateAtTier %d", options20.RecreateAtTier);
+				break;
+			}
+
+			for (D3D12_FEATURE_DATA_D3D12_OPTIONS21 options21; SUCCEEDED(m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS21, &options21, sizeof(options21) ) );)
+			{
+				BX_TRACE("D3D12 options 21:");
+				BX_TRACE("\tWorkGraphsTier %d", options21.WorkGraphsTier);
+				BX_TRACE("\tExecuteIndirectTier %d", options21.ExecuteIndirectTier);
+				BX_TRACE("\tSampleCmpGradientAndBiasSupported %d", options21.SampleCmpGradientAndBiasSupported);
+				BX_TRACE("\tExtendedCommandInfoSupported %d", options21.ExtendedCommandInfoSupported);
+				break;
+			}
+
 			initHeapProperties(m_device);
 
-			m_cmd.init(m_device);
+			m_cmd.init(m_device, (ID3D12CommandQueue*)g_platformData.queue);
 			m_device->SetPrivateDataInterface(IID_ID3D12CommandQueue, m_cmd.m_commandQueue);
 			errorState = ErrorState::CreatedCommandQueue;
 
@@ -1126,7 +1263,7 @@ namespace bgfx { namespace d3d12
 				bx::memSet(&m_scd, 0, sizeof(m_scd) );
 				m_scd.width  = _init.resolution.width;
 				m_scd.height = _init.resolution.height;
-				m_scd.format = s_textureFormat[_init.resolution.format].m_fmt;
+				m_scd.format = s_textureFormat[_init.resolution.formatColor].m_fmt;
 				m_scd.stereo  = false;
 
 				updateMsaa(m_scd.format);
@@ -1186,8 +1323,9 @@ namespace bgfx { namespace d3d12
 						resourceDesc.Height     = m_scd.height;
 						resourceDesc.MipLevels  = 1;
 						resourceDesc.Format     = (m_resolution.reset & BGFX_RESET_SRGB_BACKBUFFER)
-													? s_textureFormat[m_resolution.format].m_fmtSrgb
-													: s_textureFormat[m_resolution.format].m_fmt;
+							? s_textureFormat[m_resolution.formatColor].m_fmtSrgb
+							: s_textureFormat[m_resolution.formatColor].m_fmt
+							;
 						resourceDesc.SampleDesc = m_scd.sampleDesc;
 						resourceDesc.Layout     = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 						resourceDesc.Flags      = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
@@ -1281,51 +1419,184 @@ namespace bgfx { namespace d3d12
 						, BGFX_CONFIG_MAX_TEXTURES + BGFX_CONFIG_MAX_SHADERS + BGFX_CONFIG_MAX_DRAW_CALLS
 						);
 				}
+
 				m_samplerAllocator.create(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER
 					, 2048
 					, BGFX_CONFIG_MAX_TEXTURE_SAMPLERS
 					);
 
-				D3D12_DESCRIPTOR_RANGE descRange[] =
+				const D3D12_DESCRIPTOR_RANGE samplerDescRange =
 				{
-					{ D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, BGFX_CONFIG_MAX_TEXTURE_SAMPLERS, 0, 0, D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND },
-					{ D3D12_DESCRIPTOR_RANGE_TYPE_SRV,     BGFX_CONFIG_MAX_TEXTURE_SAMPLERS, 0, 0, D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND },
-					{ D3D12_DESCRIPTOR_RANGE_TYPE_CBV,     1,                                0, 0, D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND },
-					{ D3D12_DESCRIPTOR_RANGE_TYPE_UAV,     BGFX_CONFIG_MAX_TEXTURE_SAMPLERS, 0, 0, D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND },
+					.RangeType          = D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER,
+					.NumDescriptors     = BGFX_CONFIG_MAX_TEXTURE_SAMPLERS,
+					.BaseShaderRegister = 0,
+					.RegisterSpace      = 0,
+					.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND,
 				};
-				BX_STATIC_ASSERT(BX_COUNTOF(descRange) == Rdt::Count);
 
-				D3D12_ROOT_PARAMETER rootParameter[] =
+				const D3D12_DESCRIPTOR_RANGE srvDescRange =
 				{
-					{ D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE, { { 1, &descRange[Rdt::Sampler] } }, D3D12_SHADER_VISIBILITY_ALL },
-					{ D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE, { { 1, &descRange[Rdt::SRV]     } }, D3D12_SHADER_VISIBILITY_ALL },
-					{ D3D12_ROOT_PARAMETER_TYPE_CBV,              { { 0, 0                        } }, D3D12_SHADER_VISIBILITY_ALL },
-					{ D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE, { { 1, &descRange[Rdt::UAV]     } }, D3D12_SHADER_VISIBILITY_ALL },
+					.RangeType          = D3D12_DESCRIPTOR_RANGE_TYPE_SRV,
+					.NumDescriptors     = BGFX_CONFIG_MAX_TEXTURE_SAMPLERS,
+					.BaseShaderRegister = 0,
+					.RegisterSpace      = 0,
+					.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND,
 				};
-				rootParameter[Rdt::CBV].Descriptor.RegisterSpace  = 0;
-				rootParameter[Rdt::CBV].Descriptor.ShaderRegister = 0;
 
-				D3D12_ROOT_SIGNATURE_DESC descRootSignature;
-				descRootSignature.NumParameters = BX_COUNTOF(rootParameter);
-				descRootSignature.pParameters   = rootParameter;
-				descRootSignature.NumStaticSamplers = 0;
-				descRootSignature.pStaticSamplers   = NULL;
-				descRootSignature.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+				const D3D12_DESCRIPTOR_RANGE uavDescRange =
+				{
+					.RangeType          = D3D12_DESCRIPTOR_RANGE_TYPE_UAV,
+					.NumDescriptors     = BGFX_CONFIG_MAX_TEXTURE_SAMPLERS,
+					.BaseShaderRegister = 0,
+					.RegisterSpace      = 0,
+					.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND,
+				};
 
-				ID3DBlob* outBlob;
-				ID3DBlob* errorBlob;
-				DX_CHECK(D3D12SerializeRootSignature(&descRootSignature
-					, D3D_ROOT_SIGNATURE_VERSION_1
-					, &outBlob
-					, &errorBlob
-					) );
+				{
+					const D3D12_ROOT_PARAMETER renderRootParameter[] =
+					{
+						{ .ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE,
+							.DescriptorTable =
+							{
+								.NumDescriptorRanges = 1,
+								.pDescriptorRanges   = &samplerDescRange,
+							},
+							.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL,
+						},
+						{ .ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE,
+							.DescriptorTable =
+							{
+								.NumDescriptorRanges = 1,
+								.pDescriptorRanges   = &srvDescRange,
+							},
+							.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL,
+						},
+						{
+							.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV,
+							.Constants =
+							{
+								.ShaderRegister = 0,
+								.RegisterSpace  = 0,
+								.Num32BitValues = 0,
+							},
+							.ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX,
+						},
+						{
+							.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV,
+							.Constants =
+							{
+								.ShaderRegister = 0,
+								.RegisterSpace  = 0,
+								.Num32BitValues = 0,
+							},
+							.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL,
+						},
+						{
+							.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE,
+							.DescriptorTable =
+							{
+								.NumDescriptorRanges = 1,
+								.pDescriptorRanges   = &uavDescRange,
+							},
+							.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL,
+						},
+					};
+					static_assert(BX_COUNTOF(renderRootParameter) == RenderRp::Count, "");
 
-				DX_CHECK(m_device->CreateRootSignature(0
-					, outBlob->GetBufferPointer()
-					, outBlob->GetBufferSize()
-					, IID_ID3D12RootSignature
-					, (void**)&m_rootSignature
-					) );
+					const D3D12_ROOT_SIGNATURE_DESC renderRootSignatureDesc =
+					{
+						.NumParameters     = BX_COUNTOF(renderRootParameter),
+						.pParameters       = renderRootParameter,
+						.NumStaticSamplers = 0,
+						.pStaticSamplers   = NULL,
+						.Flags             = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT,
+					};
+
+					ID3DBlob* outBlob;
+					DX_CHECK(D3D12SerializeRootSignature(
+						  &renderRootSignatureDesc
+						, D3D_ROOT_SIGNATURE_VERSION_1
+						, &outBlob
+						, NULL
+						) );
+
+					DX_CHECK(m_device->CreateRootSignature(
+						  0
+						, outBlob->GetBufferPointer()
+						, outBlob->GetBufferSize()
+						, IID_ID3D12RootSignature
+						, (void**)&m_rootSignature
+						) );
+					DX_RELEASE(outBlob, 0);
+				}
+
+				{
+					const D3D12_ROOT_PARAMETER computeRootParameter[] =
+					{
+						{ .ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE,
+							.DescriptorTable =
+							{
+								.NumDescriptorRanges = 1,
+								.pDescriptorRanges   = &samplerDescRange,
+							},
+							.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL,
+						},
+						{ .ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE,
+							.DescriptorTable =
+							{
+								.NumDescriptorRanges = 1,
+								.pDescriptorRanges   = &srvDescRange,
+							},
+							.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL,
+						},
+						{
+							.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV,
+							.Constants =
+							{
+								.ShaderRegister = 0,
+								.RegisterSpace  = 0,
+								.Num32BitValues = 0,
+							},
+							.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL,
+						},
+						{
+							.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE,
+							.DescriptorTable =
+							{
+								.NumDescriptorRanges = 1,
+								.pDescriptorRanges   = &uavDescRange,
+							},
+							.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL,
+						},
+					};
+					static_assert(BX_COUNTOF(computeRootParameter) == ComputeRp::Count, "");
+
+					const D3D12_ROOT_SIGNATURE_DESC computeRootSignatureDesc =
+					{
+						.NumParameters     = BX_COUNTOF(computeRootParameter),
+						.pParameters       = computeRootParameter,
+						.NumStaticSamplers = 0,
+						.pStaticSamplers   = NULL,
+						.Flags             = D3D12_ROOT_SIGNATURE_FLAG_NONE,
+					};
+
+					ID3DBlob* outBlob;
+					DX_CHECK(D3D12SerializeRootSignature(
+						  &computeRootSignatureDesc
+						, D3D_ROOT_SIGNATURE_VERSION_1
+						, &outBlob
+						, NULL
+						) );
+
+					DX_CHECK(m_device->CreateRootSignature(
+						  0
+						, outBlob->GetBufferPointer()
+						, outBlob->GetBufferSize()
+						, IID_ID3D12RootSignature
+						, (void**)&m_computeRootSignature
+						) );
+					DX_RELEASE(outBlob, 0);
+				}
 
 				///
 				m_directAccessSupport = true
@@ -1334,30 +1605,32 @@ namespace bgfx { namespace d3d12
 					;
 
 				g_caps.supported |= ( 0
-					| BGFX_CAPS_TEXTURE_3D
-					| BGFX_CAPS_TEXTURE_COMPARE_ALL
+					| BGFX_CAPS_ALPHA_TO_COVERAGE
+					| BGFX_CAPS_BLEND_INDEPENDENT
+					| BGFX_CAPS_COMPUTE
+					| BGFX_CAPS_DRAW_INDIRECT
+					| BGFX_CAPS_DRAW_INDIRECT_COUNT
+					| BGFX_CAPS_FRAGMENT_DEPTH
+					| (m_options.ROVsSupported ? BGFX_CAPS_FRAGMENT_ORDERING : 0)
+					| BGFX_CAPS_IMAGE_RW
 					| BGFX_CAPS_INDEX32
 					| BGFX_CAPS_INSTANCING
-					| BGFX_CAPS_DRAW_INDIRECT
+					| BGFX_CAPS_OCCLUSION_QUERY
+					| BGFX_CAPS_PRIMITIVE_ID
+					| (BX_ENABLED(BX_PLATFORM_WINDOWS) ? BGFX_CAPS_SWAP_CHAIN : 0)
+					| BGFX_CAPS_TEXTURE_2D_ARRAY
+					| BGFX_CAPS_TEXTURE_3D
+					| BGFX_CAPS_TEXTURE_BLIT
+					| BGFX_CAPS_TEXTURE_COMPARE_ALL
+					| BGFX_CAPS_TEXTURE_CUBE_ARRAY
+					| (m_directAccessSupport ? BGFX_CAPS_TEXTURE_DIRECT_ACCESS : 0)
+ 					| BGFX_CAPS_TEXTURE_EXTERNAL
+					| BGFX_CAPS_TEXTURE_READ_BACK
+					| (m_variableRateShadingSupport ? BGFX_CAPS_VARIABLE_RATE_SHADING : 0)
 					| BGFX_CAPS_VERTEX_ATTRIB_HALF
 					| BGFX_CAPS_VERTEX_ATTRIB_UINT10
 					| BGFX_CAPS_VERTEX_ID
-					| BGFX_CAPS_FRAGMENT_DEPTH
-					| BGFX_CAPS_BLEND_INDEPENDENT
-					| BGFX_CAPS_COMPUTE
-					| (m_options.ROVsSupported ? BGFX_CAPS_FRAGMENT_ORDERING     : 0)
-					| (m_directAccessSupport   ? BGFX_CAPS_TEXTURE_DIRECT_ACCESS : 0)
-					| (BX_ENABLED(BX_PLATFORM_WINDOWS) ? BGFX_CAPS_SWAP_CHAIN : 0)
-					| BGFX_CAPS_TEXTURE_BLIT
-					| BGFX_CAPS_TEXTURE_READ_BACK
-					| BGFX_CAPS_OCCLUSION_QUERY
-					| BGFX_CAPS_ALPHA_TO_COVERAGE
-					| BGFX_CAPS_TEXTURE_2D_ARRAY
-					| BGFX_CAPS_TEXTURE_CUBE_ARRAY
-					| BGFX_CAPS_IMAGE_RW
 					| BGFX_CAPS_VIEWPORT_LAYER_ARRAY
-					| BGFX_CAPS_DRAW_INDIRECT_COUNT
-					| BGFX_CAPS_PRIMITIVE_ID
 					);
 				g_caps.limits.maxTextureSize     = D3D12_REQ_TEXTURE2D_U_OR_V_DIMENSION;
 				g_caps.limits.maxTextureLayers   = D3D12_REQ_TEXTURE2D_ARRAY_AXIS_DIMENSION;
@@ -1367,9 +1640,10 @@ namespace bgfx { namespace d3d12
 
 				for (uint32_t ii = 0; ii < TextureFormat::Count; ++ii)
 				{
-					uint16_t support = BGFX_CAPS_FORMAT_TEXTURE_NONE;
+					uint32_t support = BGFX_CAPS_FORMAT_TEXTURE_NONE;
 
-					const DXGI_FORMAT fmt = bimg::isDepth(bimg::TextureFormat::Enum(ii) )
+					const bool isDepthFormat = bimg::isDepth(bimg::TextureFormat::Enum(ii));
+					const DXGI_FORMAT fmt = isDepthFormat
 						? s_textureFormat[ii].m_fmtDsv
 						: s_textureFormat[ii].m_fmt
 						;
@@ -1440,10 +1714,47 @@ namespace bgfx { namespace d3d12
 									? BGFX_CAPS_FORMAT_TEXTURE_MSAA
 									: BGFX_CAPS_FORMAT_TEXTURE_NONE
 									;
+
+							support |= 0 != (data.Support1 & (0
+									| D3D12_FORMAT_SUPPORT1_DISPLAY
+									) )
+									? BGFX_CAPS_FORMAT_TEXTURE_BACKBUFFER
+									: BGFX_CAPS_FORMAT_TEXTURE_NONE
+									;
+
+							support |= 0 != (data.Support1 & D3D12_FORMAT_SUPPORT1_DISPLAY)
+									|| 0 != (data.Support2 & D3D12_FORMAT_SUPPORT2_DISPLAYABLE)
+									? BGFX_CAPS_FORMAT_TEXTURE_BACKBUFFER
+									: BGFX_CAPS_FORMAT_TEXTURE_NONE
+									;
 						}
 						else
 						{
 							BX_TRACE("CheckFeatureSupport failed with %x for format %s.", hr, getName(TextureFormat::Enum(ii) ) );
+						}
+
+						if (isDepthFormat)
+						{
+							const DXGI_FORMAT fmtDepthSampling = s_textureFormat[ii].m_fmtSrv;
+							if (DXGI_FORMAT_UNKNOWN != fmtDepthSampling)
+							{
+								D3D12_FEATURE_DATA_FORMAT_SUPPORT dataSampling;
+								dataSampling.Format = fmtDepthSampling;
+								hr = m_device->CheckFeatureSupport(D3D12_FEATURE_FORMAT_SUPPORT, &dataSampling, sizeof(dataSampling));
+								if (SUCCEEDED(hr))
+								{
+									support |= 0 != (dataSampling.Support1 & (0
+										| D3D12_FORMAT_SUPPORT1_MULTISAMPLE_LOAD
+										))
+										? BGFX_CAPS_FORMAT_TEXTURE_MSAA
+										: BGFX_CAPS_FORMAT_TEXTURE_NONE
+										;
+								}
+								else
+								{
+									BX_TRACE("CheckFeatureSupport depth srv failed with %x for format %s.", hr, getName(TextureFormat::Enum(ii)));
+								}
+							}
 						}
 
 						if (0 != (support & BGFX_CAPS_FORMAT_TEXTURE_IMAGE_READ) )
@@ -1503,6 +1814,12 @@ namespace bgfx { namespace d3d12
 									| D3D12_FORMAT_SUPPORT1_TEXTURECUBE
 									) )
 									? BGFX_CAPS_FORMAT_TEXTURE_CUBE_SRGB
+									: BGFX_CAPS_FORMAT_TEXTURE_NONE
+									;
+
+							support |= 0 != (data.Support1 & D3D12_FORMAT_SUPPORT1_DISPLAY)
+									|| 0 != (data.Support2 & D3D12_FORMAT_SUPPORT2_DISPLAYABLE)
+									? BGFX_CAPS_FORMAT_TEXTURE_BACKBUFFER
 									: BGFX_CAPS_FORMAT_TEXTURE_NONE
 									;
 						}
@@ -1573,24 +1890,24 @@ namespace bgfx { namespace d3d12
 			case ErrorState::CreatedCommandQueue:
 				m_device->SetPrivateDataInterface(IID_ID3D12CommandQueue, NULL);
 				m_cmd.shutdown();
-				BX_FALLTHROUGH;
+				[[fallthrough]];
 
 			case ErrorState::CreatedDXGIFactory:
 				DX_RELEASE(m_device,  0);
 #if !BX_PLATFORM_LINUX
 				m_dxgi.shutdown();
 #endif // !BX_PLATFORM_LINUX
-				BX_FALLTHROUGH;
+				[[fallthrough]];
 
 #if USE_D3D12_DYNAMIC_LIB
 			case ErrorState::LoadedDXGI:
 			case ErrorState::LoadedD3D12:
 				bx::dlclose(m_d3d12Dll);
-				BX_FALLTHROUGH;
+				[[fallthrough]];
 
 			case ErrorState::LoadedKernel32:
 				bx::dlclose(m_kernel32Dll);
-				BX_FALLTHROUGH;
+				[[fallthrough]];
 
 #endif // USE_D3D12_DYNAMIC_LIB
 			case ErrorState::Default:
@@ -1657,6 +1974,7 @@ namespace bgfx { namespace d3d12
 				DX_RELEASE(m_commandSignature[ii], 0);
 			}
 
+			DX_RELEASE(m_computeRootSignature, 0);
 			DX_RELEASE(m_rootSignature, 0);
 			DX_RELEASE(m_msaaRt, 0);
 			DX_RELEASE(m_swapChain, 0);
@@ -1731,7 +2049,7 @@ namespace bgfx { namespace d3d12
 					hr = m_swapChain->Present(syncInterval, presentFlags);
 				}
 
-				int64_t now = bx::getHPCounter();
+				const int64_t now = bx::getHPCounter();
 				m_presentElapsed = now - start;
 
 				m_lost = isLost(hr);
@@ -1827,13 +2145,9 @@ namespace bgfx { namespace d3d12
 			m_program[_handle.idx].destroy();
 		}
 
-		void* createTexture(TextureHandle _handle, const Memory* _mem, uint64_t _flags, uint8_t _skip) override
+		void* createTexture(TextureHandle _handle, const Memory* _mem, uint64_t _flags, uint8_t _skip, uint64_t _external) override
 		{
-			return m_textures[_handle.idx].create(_mem, _flags, _skip);
-		}
-
-		void updateTextureBegin(TextureHandle /*_handle*/, uint8_t /*_side*/, uint8_t /*_mip*/) override
-		{
+			return m_textures[_handle.idx].create(_mem, _flags, _skip, _external);
 		}
 
 		void updateTexture(TextureHandle _handle, uint8_t _side, uint8_t _mip, const Rect& _rect, uint16_t _z, uint16_t _depth, uint16_t _pitch, const Memory* _mem) override
@@ -1841,11 +2155,7 @@ namespace bgfx { namespace d3d12
 			m_textures[_handle.idx].update(m_commandList, _side, _mip, _rect, _z, _depth, _pitch, _mem);
 		}
 
-		void updateTextureEnd() override
-		{
-		}
-
-		void readTexture(TextureHandle _handle, void* _data, uint8_t _mip ) override
+		void readTexture(TextureHandle _handle, void* _data, uint8_t _mip) override
 		{
 			const TextureD3D12& texture = m_textures[_handle.idx];
 
@@ -1868,8 +2178,8 @@ namespace bgfx { namespace d3d12
 
 			ID3D12Resource* readback = createCommittedResource(m_device, HeapProperty::ReadBack, total);
 
-			uint32_t srcWidth  = bx::uint32_max(1, texture.m_width >>_mip);
-			uint32_t srcHeight = bx::uint32_max(1, texture.m_height>>_mip);
+			const uint32_t srcWidth  = bx::max(1u, texture.m_width >>_mip);
+			const uint32_t srcHeight = bx::max(1u, texture.m_height>>_mip);
 
 			D3D12_BOX box;
 			box.left   = 0;
@@ -1896,13 +2206,7 @@ namespace bgfx { namespace d3d12
 			uint8_t* src;
 			readback->Map(0, NULL, (void**)&src);
 
-			for (uint32_t yy = 0, height = srcHeight; yy < height; ++yy)
-			{
-				bx::memCopy(dst, src, pitch);
-
-				src += srcPitch;
-				dst += dstPitch;
-			}
+			bx::memCopy(dst, dstPitch, src, srcPitch, pitch, srcHeight);
 
 			D3D12_RANGE writeRange = { 0, 0 };
 			readback->Unmap(0, &writeRange);
@@ -1918,8 +2222,7 @@ namespace bgfx { namespace d3d12
 			const Memory* mem = alloc(size);
 
 			bx::StaticMemoryBlockWriter writer(mem->data, mem->size);
-			uint32_t magic = BGFX_CHUNK_MAGIC_TEX;
-			bx::write(&writer, magic, bx::ErrorAssert{});
+			bx::write(&writer, kChunkMagicTex, bx::ErrorAssert{});
 
 			TextureCreate tc;
 			tc.m_width     = _width;
@@ -1933,12 +2236,12 @@ namespace bgfx { namespace d3d12
 			bx::write(&writer, tc, bx::ErrorAssert{});
 
 			texture.destroy();
-			texture.create(mem, texture.m_flags, 0);
+			texture.create(mem, texture.m_flags, 0, 0);
 
 			release(mem);
 		}
 
-		void overrideInternal(TextureHandle _handle, uintptr_t _ptr) override
+		void overrideInternal(TextureHandle _handle, uintptr_t _ptr, uint16_t /*_layerIndex*/) override
 		{
 			// Resource ref. counts might be messed up outside of bgfx.
 			// Disabling ref. count check once texture is overridden.
@@ -2038,6 +2341,28 @@ namespace bgfx { namespace d3d12
 
 			D3D12_RESOURCE_DESC desc = getResourceDesc(backBuffer);
 
+			TextureFormat::Enum colorFormat = TextureFormat::Enum::Count;
+			for (int i = 0; i < TextureFormat::Enum::Count; i++)
+			{
+				if (s_textureFormat[i].m_fmt == desc.Format)
+				{
+					colorFormat = TextureFormat::Enum(i);
+					break;
+				}
+
+				if (s_textureFormat[i].m_fmtSrgb == desc.Format)
+				{
+					colorFormat = TextureFormat::Enum(i);
+					break;
+				}
+			}
+
+			if (colorFormat == TextureFormat::Enum::Count)
+			{
+				BX_TRACE("Unable to capture screenshot %s.", _filePath);
+				return;
+			}
+
 			const uint32_t width  = (uint32_t)desc.Width;
 			const uint32_t height = (uint32_t)desc.Height;
 
@@ -2075,22 +2400,17 @@ namespace bgfx { namespace d3d12
 
 			void* data;
 			readback->Map(0, NULL, (void**)&data);
-			bimg::imageSwizzleBgra8(
-				  data
-				, layout.Footprint.RowPitch
-				, width
-				, height
-				, data
-				, layout.Footprint.RowPitch
-				);
+
 			g_callback->screenShot(_filePath
 				, width
 				, height
 				, layout.Footprint.RowPitch
+				, colorFormat
 				, data
 				, (uint32_t)total
 				, false
 				);
+
 			D3D12_RANGE writeRange = { 0, 0 };
 			readback->Unmap(0, &writeRange);
 
@@ -2153,9 +2473,11 @@ namespace bgfx { namespace d3d12
 
 		void submitBlit(BlitState& _bs, uint16_t _view);
 
+		void submitUniformCache(UniformCacheState& _ucs, uint16_t _view);
+
 		void submit(Frame* _render, ClearQuad& _clearQuad, TextVideoMemBlitter& _textVideoMemBlitter) override;
 
-		void blitSetup(TextVideoMemBlitter& _blitter) override
+		void dbgTextRenderBegin(TextVideoMemBlitter& _blitter) override
 		{
 			const uint32_t width  = m_scd.width;
 			const uint32_t height = m_scd.height;
@@ -2198,7 +2520,7 @@ namespace bgfx { namespace d3d12
 			float proj[16];
 			bx::mtxOrtho(proj, 0.0f, (float)width, (float)height, 0.0f, 0.0f, 1000.0f, 0.0f, false);
 
-			PredefinedUniform& predefined = m_program[_blitter.m_program.idx].m_predefined[0];
+			const PredefinedUniform& predefined = m_program[_blitter.m_program.idx].m_predefined[0];
 			uint8_t flags = predefined.m_type;
 			setShaderUniform(flags, predefined.m_loc, proj, 4);
 
@@ -2212,18 +2534,19 @@ namespace bgfx { namespace d3d12
 				scratchBuffer.getHeap(),
 			};
 			m_commandList->SetDescriptorHeaps(BX_COUNTOF(heaps), heaps);
-			m_commandList->SetGraphicsRootConstantBufferView(Rdt::CBV, gpuAddress);
+			m_commandList->SetGraphicsRootConstantBufferView(RenderRp::CBV, gpuAddress);
+			m_commandList->SetGraphicsRootConstantBufferView(RenderRp::CBF, gpuAddress + m_program[_blitter.m_program.idx].m_vsh->m_size);
 
 			TextureD3D12& texture = m_textures[_blitter.m_texture.idx];
-			uint32_t samplerFlags[] = { uint32_t(texture.m_flags & BGFX_SAMPLER_BITS_MASK) };
-			uint16_t samplerStateIdx = getSamplerState(samplerFlags, BX_COUNTOF(samplerFlags), NULL);
-			m_commandList->SetGraphicsRootDescriptorTable(Rdt::Sampler, m_samplerAllocator.get(samplerStateIdx) );
+			const uint32_t samplerFlags[] = { uint32_t(texture.m_flags & BGFX_SAMPLER_BITS_MASK) };
+			const uint16_t samplerStateIdx = getSamplerState(samplerFlags, BX_COUNTOF(samplerFlags), NULL);
+			m_commandList->SetGraphicsRootDescriptorTable(RenderRp::Sampler, m_samplerAllocator.get(samplerStateIdx) );
 			D3D12_GPU_DESCRIPTOR_HANDLE srvHandle;
 			scratchBuffer.allocSrv(srvHandle, texture);
-			m_commandList->SetGraphicsRootDescriptorTable(Rdt::SRV, srvHandle);
+			m_commandList->SetGraphicsRootDescriptorTable(RenderRp::SRV, srvHandle);
 
-			VertexBufferD3D12&  vb     = m_vertexBuffers[_blitter.m_vb->handle.idx];
-			const VertexLayout& layout = m_vertexLayouts[_blitter.m_vb->layoutHandle.idx];
+			const VertexBufferD3D12& vb = m_vertexBuffers[_blitter.m_vb->handle.idx];
+			const VertexLayout& layout  = m_vertexLayouts[_blitter.m_vb->layoutHandle.idx];
 			D3D12_VERTEX_BUFFER_VIEW viewDesc;
 			viewDesc.BufferLocation = vb.m_gpuVA;
 			viewDesc.StrideInBytes  = layout.m_stride;
@@ -2240,7 +2563,7 @@ namespace bgfx { namespace d3d12
 			m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		}
 
-		void blitRender(TextVideoMemBlitter& _blitter, uint32_t _numIndices) override
+		void dbgTextRender(TextVideoMemBlitter& _blitter, uint32_t _numIndices) override
 		{
 			const uint32_t numVertices = _numIndices*4/6;
 			if (0 < numVertices)
@@ -2248,13 +2571,12 @@ namespace bgfx { namespace d3d12
 				m_indexBuffers [_blitter.m_ib->handle.idx].update(m_commandList, 0, _numIndices*2, _blitter.m_ib->data);
 				m_vertexBuffers[_blitter.m_vb->handle.idx].update(m_commandList, 0, numVertices*_blitter.m_layout.m_stride, _blitter.m_vb->data, true);
 
-				m_commandList->DrawIndexedInstanced(_numIndices
-					, 1
-					, 0
-					, 0
-					, 0
-					);
+				m_commandList->DrawIndexedInstanced(_numIndices, 1, 0, 0, 0);
 			}
+		}
+
+		void dbgTextRenderEnd(TextVideoMemBlitter& /*_blitter*/) override
+		{
 		}
 
 		void preReset()
@@ -2271,6 +2593,7 @@ namespace bgfx { namespace d3d12
 					DX_RELEASE(m_backBufferColor[ii], 1);
 #endif // BX_PLATFORM_WINDOWS || BX_PLATFORM_WINRT
 				}
+
 				DX_RELEASE(m_backBufferDepthStencil, 0);
 			}
 
@@ -2303,13 +2626,16 @@ namespace bgfx { namespace d3d12
 
 					D3D12_RENDER_TARGET_VIEW_DESC rtvDesc;
 					rtvDesc.Format = (m_resolution.reset & BGFX_RESET_SRGB_BACKBUFFER)
-						? s_textureFormat[m_resolution.format].m_fmtSrgb
-						: s_textureFormat[m_resolution.format].m_fmt;
+						? s_textureFormat[m_resolution.formatColor].m_fmtSrgb
+						: s_textureFormat[m_resolution.formatColor].m_fmt
+						;
 
 					if (1 < getResourceDesc(m_backBufferColor[ii]).DepthOrArraySize)
 					{
-						rtvDesc.ViewDimension = (NULL == m_msaaRt) ?
-							D3D12_RTV_DIMENSION_TEXTURE2DARRAY : D3D12_RTV_DIMENSION_TEXTURE2DMSARRAY;
+						rtvDesc.ViewDimension = (NULL == m_msaaRt)
+							? D3D12_RTV_DIMENSION_TEXTURE2DARRAY
+							: D3D12_RTV_DIMENSION_TEXTURE2DMSARRAY
+							;
 						rtvDesc.Texture2DArray.FirstArraySlice = 0;
 						rtvDesc.Texture2DArray.ArraySize = getResourceDesc(m_backBufferColor[ii]).DepthOrArraySize;
 						rtvDesc.Texture2DArray.MipSlice = 0;
@@ -2317,8 +2643,10 @@ namespace bgfx { namespace d3d12
 					}
 					else
 					{
-						rtvDesc.ViewDimension = (NULL == m_msaaRt) ?
-							D3D12_RTV_DIMENSION_TEXTURE2D : D3D12_RTV_DIMENSION_TEXTURE2DMS;
+						rtvDesc.ViewDimension = (NULL == m_msaaRt)
+							? D3D12_RTV_DIMENSION_TEXTURE2D
+							: D3D12_RTV_DIMENSION_TEXTURE2DMS
+							;
 						rtvDesc.Texture2D.MipSlice = 0;
 						rtvDesc.Texture2D.PlaneSlice = 0;
 					}
@@ -2346,33 +2674,36 @@ namespace bgfx { namespace d3d12
 				}
 			}
 
-			D3D12_RESOURCE_DESC resourceDesc;
-			resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-			resourceDesc.Alignment = 1 < m_scd.sampleDesc.Count ? D3D12_DEFAULT_MSAA_RESOURCE_PLACEMENT_ALIGNMENT : 0;
-			resourceDesc.Width     = bx::uint32_max(m_resolution.width,  1);
-			resourceDesc.Height    = bx::uint32_max(m_resolution.height, 1);
-			resourceDesc.DepthOrArraySize = 1;
-			resourceDesc.MipLevels        = 1;
-			resourceDesc.Format           = DXGI_FORMAT_D24_UNORM_S8_UINT;
-			resourceDesc.SampleDesc       = m_scd.sampleDesc;
-			resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-			resourceDesc.Flags  = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
-
-			D3D12_CLEAR_VALUE clearValue;
-			clearValue.Format = resourceDesc.Format;
-			clearValue.DepthStencil.Depth   = 1.0f;
-			clearValue.DepthStencil.Stencil = 0;
-
 			m_commandList = m_cmd.alloc();
 
-			m_backBufferDepthStencil = createCommittedResource(m_device, HeapProperty::Default, &resourceDesc, &clearValue);
-			m_device->CreateDepthStencilView(m_backBufferDepthStencil, NULL, getCPUHandleHeapStart(m_dsvDescriptorHeap));
+			if (bimg::isDepth(bimg::TextureFormat::Enum(m_resolution.formatDepthStencil) ) )
+			{
+				D3D12_RESOURCE_DESC resourceDesc;
+				resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+				resourceDesc.Alignment = 1 < m_scd.sampleDesc.Count ? D3D12_DEFAULT_MSAA_RESOURCE_PLACEMENT_ALIGNMENT : 0;
+				resourceDesc.Width     = bx::uint32_max(m_resolution.width,  1);
+				resourceDesc.Height    = bx::uint32_max(m_resolution.height, 1);
+				resourceDesc.DepthOrArraySize = 1;
+				resourceDesc.MipLevels        = 1;
+				resourceDesc.Format           = s_textureFormat[m_resolution.formatDepthStencil].m_fmtDsv;
+				resourceDesc.SampleDesc       = m_scd.sampleDesc;
+				resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+				resourceDesc.Flags  = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
 
-			setResourceBarrier(m_commandList
-				, m_backBufferDepthStencil
-				, D3D12_RESOURCE_STATE_COMMON
-				, D3D12_RESOURCE_STATE_DEPTH_WRITE
-				);
+				D3D12_CLEAR_VALUE clearValue;
+				clearValue.Format = resourceDesc.Format;
+				clearValue.DepthStencil.Depth   = 1.0f;
+				clearValue.DepthStencil.Stencil = 0;
+
+				m_backBufferDepthStencil = createCommittedResource(m_device, HeapProperty::Default, &resourceDesc, &clearValue);
+				m_device->CreateDepthStencilView(m_backBufferDepthStencil, NULL, getCPUHandleHeapStart(m_dsvDescriptorHeap) );
+
+				setResourceBarrier(m_commandList
+					, m_backBufferDepthStencil
+					, D3D12_RESOURCE_STATE_COMMON
+					, D3D12_RESOURCE_STATE_DEPTH_WRITE
+					);
+			}
 
 			for (uint32_t ii = 0; ii < BX_COUNTOF(m_frameBuffers); ++ii)
 			{
@@ -2460,10 +2791,11 @@ namespace bgfx { namespace d3d12
 				| BGFX_RESET_SUSPEND
 				);
 
-			if (m_resolution.width            !=  _resolution.width
-			||  m_resolution.height           !=  _resolution.height
-			||  m_resolution.format           !=  _resolution.format
-			|| (m_resolution.reset&maskFlags) != (_resolution.reset&maskFlags) )
+			if (m_resolution.width              !=  _resolution.width
+			||  m_resolution.height             !=  _resolution.height
+			||  m_resolution.formatColor        !=  _resolution.formatColor
+			||  m_resolution.formatDepthStencil !=  _resolution.formatDepthStencil
+			|| (m_resolution.reset&maskFlags)   != (_resolution.reset&maskFlags) )
 			{
 				uint32_t flags = _resolution.reset & (~BGFX_RESET_INTERNAL_FORCE);
 
@@ -2480,7 +2812,7 @@ namespace bgfx { namespace d3d12
 
 				m_scd.width  = _resolution.width;
 				m_scd.height = _resolution.height;
-				m_scd.format = s_textureFormat[_resolution.format].m_fmt;
+				m_scd.format = s_textureFormat[_resolution.formatColor].m_fmt;
 
 				preReset();
 
@@ -2495,12 +2827,12 @@ namespace bgfx { namespace d3d12
 					{
 #if BX_PLATFORM_WINDOWS
 						uint32_t nodeMask[] = { 1, 1, 1, 1 };
-						BX_STATIC_ASSERT(BX_COUNTOF(m_backBufferColor) == BX_COUNTOF(nodeMask) );
+						static_assert(BX_COUNTOF(m_backBufferColor) == BX_COUNTOF(nodeMask) );
 						IUnknown* presentQueue[] ={ m_cmd.m_commandQueue, m_cmd.m_commandQueue, m_cmd.m_commandQueue, m_cmd.m_commandQueue };
-						BX_STATIC_ASSERT(BX_COUNTOF(m_backBufferColor) == BX_COUNTOF(presentQueue) );
+						static_assert(BX_COUNTOF(m_backBufferColor) == BX_COUNTOF(presentQueue) );
 						DX_CHECK(m_dxgi.resizeBuffers(m_swapChain, m_scd, nodeMask, presentQueue) );
 #elif BX_PLATFORM_WINRT
-						DX_CHECK(m_dxgi.resizeBuffers(m_swapChain, m_scd));
+						DX_CHECK(m_dxgi.resizeBuffers(m_swapChain, m_scd) );
 						m_backBufferColorIdx = m_scd.bufferCount-1;
 #endif // BX_PLATFORM_WINDOWS
 					}
@@ -2533,8 +2865,9 @@ namespace bgfx { namespace d3d12
 						resourceDesc.Height     = m_scd.height;
 						resourceDesc.MipLevels  = 1;
 						resourceDesc.Format     = (m_resolution.reset & BGFX_RESET_SRGB_BACKBUFFER)
-													? s_textureFormat[m_resolution.format].m_fmtSrgb
-													: s_textureFormat[m_resolution.format].m_fmt;
+							? s_textureFormat[m_resolution.formatColor].m_fmtSrgb
+							: s_textureFormat[m_resolution.formatColor].m_fmt
+							;
 						resourceDesc.SampleDesc = m_scd.sampleDesc;
 						resourceDesc.Layout     = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 						resourceDesc.Flags      = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
@@ -2644,7 +2977,10 @@ namespace bgfx { namespace d3d12
 			{
 				FrameBufferD3D12& frameBuffer = m_frameBuffers[m_fbh.idx];
 
-				if (m_rtMsaa) frameBuffer.resolve();
+				if (m_rtMsaa)
+				{
+					frameBuffer.resolve();
+				}
 
 				if (NULL == frameBuffer.m_swapChain)
 				{
@@ -2671,12 +3007,16 @@ namespace bgfx { namespace d3d12
 				if (NULL != m_swapChain)
 				{
 					m_rtvHandle = getCPUHandleHeapStart(m_rtvDescriptorHeap);
-					uint32_t rtvDescriptorSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+					const uint32_t rtvDescriptorSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 					m_rtvHandle.ptr += m_backBufferColorIdx * rtvDescriptorSize;
 					m_dsvHandle = getCPUHandleHeapStart(m_dsvDescriptorHeap);
 
 					m_currentColor        = &m_rtvHandle;
-					m_currentDepthStencil = &m_dsvHandle;
+					m_currentDepthStencil = NULL != m_backBufferDepthStencil
+						? &m_dsvHandle
+						: NULL
+						;
+
 					m_commandList->OMSetRenderTargets(1, m_currentColor, true, m_currentDepthStencil);
 				}
 			}
@@ -2865,14 +3205,14 @@ namespace bgfx { namespace d3d12
 		uint32_t setInputLayout(D3D12_INPUT_ELEMENT_DESC* _vertexElements, uint8_t _numStreams, const VertexLayout** _layouts, const ProgramD3D12& _program, uint16_t _numInstanceData)
 		{
 			uint16_t attrMask[Attrib::Count];
-			bx::memCopy(attrMask, _program.m_vsh->m_attrMask, sizeof(attrMask));
+			bx::memCopy(attrMask, _program.m_vsh->m_attrMask, sizeof(attrMask) );
 
 			D3D12_INPUT_ELEMENT_DESC* elem = _vertexElements;
 
 			for (uint8_t stream = 0; stream < _numStreams; ++stream)
 			{
 				VertexLayout layout;
-				bx::memCopy(&layout, _layouts[stream], sizeof(VertexLayout));
+				bx::memCopy(&layout, _layouts[stream], sizeof(VertexLayout) );
 
 				const bool last = stream == _numStreams-1;
 
@@ -2982,7 +3322,7 @@ namespace bgfx { namespace d3d12
 			D3D12_COMPUTE_PIPELINE_STATE_DESC desc;
 			bx::memSet(&desc, 0, sizeof(desc) );
 
-			desc.pRootSignature     = m_rootSignature;
+			desc.pRootSignature     = m_computeRootSignature;
 			desc.CS.pShaderBytecode = program.m_vsh->m_code->data;
 			desc.CS.BytecodeLength  = program.m_vsh->m_code->size;
 			desc.NodeMask           = 1;
@@ -3004,7 +3344,8 @@ namespace bgfx { namespace d3d12
 					desc.CachedPSO.pCachedBlob           = reader.getDataPtr();
 					desc.CachedPSO.CachedBlobSizeInBytes = (size_t)reader.remaining();
 
-					HRESULT hr = m_device->CreateComputePipelineState(&desc
+					HRESULT hr = m_device->CreateComputePipelineState(
+						  &desc
 						, IID_ID3D12PipelineState
 						, (void**)&pso
 						);
@@ -3018,7 +3359,8 @@ namespace bgfx { namespace d3d12
 
 			if (NULL == pso)
 			{
-				DX_CHECK(m_device->CreateComputePipelineState(&desc
+				DX_CHECK(m_device->CreateComputePipelineState(
+					  &desc
 					, IID_ID3D12PipelineState
 					, (void**)&pso
 					) );
@@ -3074,7 +3416,7 @@ namespace bgfx { namespace d3d12
 				| BGFX_STATE_PT_MASK
 				;
 
-			_stencil &= packStencil(~BGFX_STENCIL_FUNC_REF_MASK, ~BGFX_STENCIL_FUNC_REF_MASK);
+			_stencil &= kStencilNoRefMask;
 
 			VertexLayout layout;
 			if (0 < _numStreams)
@@ -3131,6 +3473,10 @@ namespace bgfx { namespace d3d12
 
 			if (NULL != program.m_fsh)
 			{
+				desc.PS.pShaderBytecode = program.m_fsh->m_code->data;
+				desc.PS.BytecodeLength  = program.m_fsh->m_code->size;
+
+#if 0
  				bx::MemoryReader rd(program.m_fsh->m_code->data, program.m_fsh->m_code->size);
 
 				DxbcContext dxbc;
@@ -3144,7 +3490,7 @@ namespace bgfx { namespace d3d12
 					union { uint32_t offset; void* ptr; } cast = { 0 };
 					filter(dxbc.shader, dxbc.shader, patchCb0, cast.ptr);
 
-					temp = alloc(uint32_t(dxbc.header.size));
+					temp = alloc(uint32_t(dxbc.header.size) );
 					bx::StaticMemoryBlockWriter wr(temp->data, temp->size);
 
 					int32_t size = write(&wr, dxbc, &err);
@@ -3181,7 +3527,7 @@ namespace bgfx { namespace d3d12
 					};
 					filter(dxbc.shader, dxbc.shader, patchCb0, cast.ptr);
 
-					temp = alloc(uint32_t(dxbc.header.size));
+					temp = alloc(uint32_t(dxbc.header.size) );
 					bx::StaticMemoryBlockWriter wr(temp->data, temp->size);
 
 					int32_t size = write(&wr, dxbc, &err);
@@ -3195,6 +3541,7 @@ namespace bgfx { namespace d3d12
 					desc.PS.pShaderBytecode = program.m_fsh->m_code->data;
 					desc.PS.BytecodeLength  = program.m_fsh->m_code->size;
 				}
+#endif // 0
 			}
 			else
 			{
@@ -3369,7 +3716,7 @@ namespace bgfx { namespace d3d12
 					break;
 				}
 
-				UniformType::Enum type;
+				uint8_t type;
 				uint16_t loc;
 				uint16_t num;
 				uint16_t copy;
@@ -3387,7 +3734,7 @@ namespace bgfx { namespace d3d12
 					data = (const char*)m_uniforms[handle.idx];
 				}
 
-				switch ( (uint32_t)type)
+				switch (type)
 				{
 				case UniformType::Mat3:
 				case UniformType::Mat3|kUniformFragmentBit:
@@ -3597,6 +3944,7 @@ namespace bgfx { namespace d3d12
 		DescriptorAllocatorD3D12 m_samplerAllocator;
 
 		ID3D12RootSignature*    m_rootSignature;
+		ID3D12RootSignature*    m_computeRootSignature;
 		ID3D12CommandSignature* m_commandSignature[3];
 
 		CommandQueueD3D12 m_cmd;
@@ -3634,6 +3982,7 @@ namespace bgfx { namespace d3d12
 		uint32_t m_backBufferColorIdx;
 		bool m_rtMsaa;
 		bool m_directAccessSupport;
+		bool m_variableRateShadingSupport;
 	};
 
 	static RendererContextD3D12* s_renderD3D12;
@@ -3962,29 +4311,41 @@ namespace bgfx { namespace d3d12
 		return gpuHandle;
 	}
 
-	void CommandQueueD3D12::init(ID3D12Device* _device)
+	void CommandQueueD3D12::init(ID3D12Device* _device, ID3D12CommandQueue* _queue)
 	{
-		D3D12_COMMAND_QUEUE_DESC queueDesc;
-		queueDesc.Type     = D3D12_COMMAND_LIST_TYPE_DIRECT;
-		queueDesc.Priority = 0;
-		queueDesc.Flags    = D3D12_COMMAND_QUEUE_FLAG_NONE;
-		queueDesc.NodeMask = 1;
-		DX_CHECK(_device->CreateCommandQueue(&queueDesc
-			, IID_ID3D12CommandQueue
-			, (void**)&m_commandQueue
-			) );
+		m_externalQueue = NULL != _queue;
+
+		if (NULL != _queue)
+		{
+			m_commandQueue  = _queue;
+		}
+		else
+		{
+			D3D12_COMMAND_QUEUE_DESC queueDesc;
+			queueDesc.Type     = D3D12_COMMAND_LIST_TYPE_DIRECT;
+			queueDesc.Priority = 0;
+			queueDesc.Flags    = D3D12_COMMAND_QUEUE_FLAG_NONE;
+			queueDesc.NodeMask = 1;
+			DX_CHECK(_device->CreateCommandQueue(
+				  &queueDesc
+				, IID_ID3D12CommandQueue
+				, (void**)&m_commandQueue
+				) );
+		}
 
 		m_completedFence = 0;
 		m_currentFence   = 0;
-		DX_CHECK(_device->CreateFence(0
+		DX_CHECK(_device->CreateFence(
+			  0
 			, D3D12_FENCE_FLAG_NONE
 			, IID_ID3D12Fence
 			, (void**)&m_fence
 			) );
 
-		for (uint32_t ii = 0; ii < BX_COUNTOF(m_commandList); ++ii)
+		for (uint32_t ii = 0; ii < kMaxCommandLists; ++ii)
 		{
-			DX_CHECK(_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT
+			DX_CHECK(_device->CreateCommandAllocator(
+				  D3D12_COMMAND_LIST_TYPE_DIRECT
 				, IID_ID3D12CommandAllocator
 				, (void**)&m_commandList[ii].m_commandAllocator
 				) );
@@ -3999,6 +4360,30 @@ namespace bgfx { namespace d3d12
 
 			DX_CHECK(m_commandList[ii].m_commandList->Close() );
 		}
+
+		const D3D12_QUERY_HEAP_DESC queryHeapDesc =
+		{
+			.Type     = D3D12_QUERY_HEAP_TYPE_PIPELINE_STATISTICS,
+			.Count    = kMaxCommandLists,
+			.NodeMask = 1,
+		};
+
+		DX_CHECK(_device->CreateQueryHeap(
+			  &queryHeapDesc
+			, IID_ID3D12QueryHeap
+			, (void**)&m_pipelineStatsQueryHeap
+			) );
+		setDebugObjectName(m_pipelineStatsQueryHeap, "Pipeline Statistics Query Heap");
+
+		m_pipelineStatsReadBack = createCommittedResource(_device, HeapProperty::ReadBack, kMaxCommandLists*sizeof(D3D12_QUERY_DATA_PIPELINE_STATISTICS) );
+		setDebugObjectName(m_pipelineStatsReadBack, "Pipeline Statistics Read-Back");
+
+		const D3D12_RANGE range =
+		{
+			.Begin = 0,
+			.End = kMaxCommandLists*sizeof(D3D12_QUERY_DATA_PIPELINE_STATISTICS),
+		};
+		m_pipelineStatsReadBack->Map(0, &range, (void**)&m_pipelineStats);
 	}
 
 	void CommandQueueD3D12::shutdown()
@@ -4007,13 +4392,25 @@ namespace bgfx { namespace d3d12
 
 		DX_RELEASE(m_fence, 0);
 
-		for (uint32_t ii = 0; ii < BX_COUNTOF(m_commandList); ++ii)
+		for (uint32_t ii = 0; ii < kMaxCommandLists; ++ii)
 		{
 			DX_RELEASE(m_commandList[ii].m_commandAllocator, 0);
 			DX_RELEASE(m_commandList[ii].m_commandList, 0);
 		}
 
-		DX_RELEASE(m_commandQueue, 0);
+		if (!m_externalQueue)
+		{
+			DX_RELEASE(m_commandQueue, 0);
+		}
+
+		const D3D12_RANGE range =
+		{
+			.Begin = 0,
+			.End = kMaxCommandLists*sizeof(D3D12_QUERY_DATA_PIPELINE_STATISTICS),
+		};
+		m_pipelineStatsReadBack->Unmap(0, &range);
+		DX_RELEASE(m_pipelineStatsQueryHeap, 0);
+		DX_RELEASE(m_pipelineStatsReadBack, 0);
 	}
 
 	ID3D12GraphicsCommandList* CommandQueueD3D12::alloc()
@@ -4026,12 +4423,38 @@ namespace bgfx { namespace d3d12
 		CommandList& commandList = m_commandList[m_control.m_current];
 		DX_CHECK(commandList.m_commandAllocator->Reset() );
 		DX_CHECK(commandList.m_commandList->Reset(commandList.m_commandAllocator, NULL) );
+		commandList.m_commandList->BeginQuery(
+			  m_pipelineStatsQueryHeap
+			, D3D12_QUERY_TYPE_PIPELINE_STATISTICS
+			, m_control.m_current
+			);
 		return commandList.m_commandList;
 	}
 
 	uint64_t CommandQueueD3D12::kick()
 	{
-		CommandList& commandList = m_commandList[m_control.m_current];
+		const uint32_t currentIdx = m_control.m_current;
+		CommandList& commandList = m_commandList[currentIdx];
+
+		for (TextureHandle th : m_external)
+		{
+			s_renderD3D12->m_textures[th.idx].setState(commandList.m_commandList, D3D12_RESOURCE_STATE_COMMON);
+		}
+
+		commandList.m_commandList->EndQuery(
+			  m_pipelineStatsQueryHeap
+			, D3D12_QUERY_TYPE_PIPELINE_STATISTICS
+			, currentIdx
+			);
+		commandList.m_commandList->ResolveQueryData(
+			  m_pipelineStatsQueryHeap
+			, D3D12_QUERY_TYPE_PIPELINE_STATISTICS
+			, currentIdx
+			, 1
+			, m_pipelineStatsReadBack
+			, currentIdx*sizeof(D3D12_QUERY_DATA_PIPELINE_STATISTICS)
+			);
+
 		DX_CHECK(commandList.m_commandList->Close() );
 
 		ID3D12CommandList* commandLists[] = { commandList.m_commandList };
@@ -4053,7 +4476,7 @@ namespace bgfx { namespace d3d12
 
 	void CommandQueueD3D12::finish(uint64_t _waitFence, bool _finishAll)
 	{
-		while (0 < m_control.available() )
+		while (0 < m_control.getNumUsed() )
 		{
 			consume();
 
@@ -4064,12 +4487,12 @@ namespace bgfx { namespace d3d12
 			}
 		}
 
-		BX_ASSERT(0 == m_control.available(), "");
+		BX_ASSERT(0 == m_control.getNumUsed(), "");
 	}
 
 	bool CommandQueueD3D12::tryFinish(uint64_t _waitFence)
 	{
-		if (0 < m_control.available() )
+		if (0 < m_control.getNumUsed() )
 		{
 			if (consume(0)
 			&& _waitFence <= m_completedFence)
@@ -4108,6 +4531,8 @@ namespace bgfx { namespace d3d12
 			}
 			ra.clear();
 
+			m_pipelineStatsSum.add(m_pipelineStats[m_control.m_read]);
+
 			m_control.consume(1);
 
 			return true;
@@ -4115,6 +4540,25 @@ namespace bgfx { namespace d3d12
 #endif // !BX_PLATFORM_LINUX
 
 		return false;
+	}
+
+	void CommandQueueD3D12::addExternal(TextureHandle _handle)
+	{
+		m_external.push_back(_handle);
+	}
+
+	void CommandQueueD3D12::removeExternal(TextureHandle _handle)
+	{
+		for (ExternalTextureArray::iterator it = m_external.begin(), itEnd = m_external.end(); it != itEnd; ++it)
+		{
+			if (it->idx == _handle.idx)
+			{
+				m_external.erase(it);
+				return;
+			}
+		}
+
+		BX_ASSERT(false, "Removing external texture failed!");
 	}
 
 	void BatchD3D12::create(uint32_t _maxDrawPerBatch)
@@ -4128,13 +4572,14 @@ namespace bgfx { namespace d3d12
 
 		D3D12_INDIRECT_ARGUMENT_DESC drawArgDesc[] =
 		{
-			{ D3D12_INDIRECT_ARGUMENT_TYPE_VERTEX_BUFFER_VIEW,   { { 0        } } },
-			{ D3D12_INDIRECT_ARGUMENT_TYPE_VERTEX_BUFFER_VIEW,   { { 1        } } },
-			{ D3D12_INDIRECT_ARGUMENT_TYPE_VERTEX_BUFFER_VIEW,   { { 2        } } },
-			{ D3D12_INDIRECT_ARGUMENT_TYPE_VERTEX_BUFFER_VIEW,   { { 3        } } },
-			{ D3D12_INDIRECT_ARGUMENT_TYPE_VERTEX_BUFFER_VIEW,   { { 4        } } },
-			{ D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT_BUFFER_VIEW, { { Rdt::CBV } } },
-			{ D3D12_INDIRECT_ARGUMENT_TYPE_DRAW,                 { { 0        } } },
+			{ D3D12_INDIRECT_ARGUMENT_TYPE_VERTEX_BUFFER_VIEW,   { { 0             } } },
+			{ D3D12_INDIRECT_ARGUMENT_TYPE_VERTEX_BUFFER_VIEW,   { { 1             } } },
+			{ D3D12_INDIRECT_ARGUMENT_TYPE_VERTEX_BUFFER_VIEW,   { { 2             } } },
+			{ D3D12_INDIRECT_ARGUMENT_TYPE_VERTEX_BUFFER_VIEW,   { { 3             } } },
+			{ D3D12_INDIRECT_ARGUMENT_TYPE_VERTEX_BUFFER_VIEW,   { { 4             } } },
+			{ D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT_BUFFER_VIEW, { { RenderRp::CBV } } },
+			{ D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT_BUFFER_VIEW, { { RenderRp::CBF } } },
+			{ D3D12_INDIRECT_ARGUMENT_TYPE_DRAW,                 { { 0             } } },
 		};
 
 		D3D12_COMMAND_SIGNATURE_DESC drawCommandSignature =
@@ -4153,14 +4598,15 @@ namespace bgfx { namespace d3d12
 
 		D3D12_INDIRECT_ARGUMENT_DESC drawIndexedArgDesc[] =
 		{
-			{ D3D12_INDIRECT_ARGUMENT_TYPE_VERTEX_BUFFER_VIEW,   { { 0        } } },
-			{ D3D12_INDIRECT_ARGUMENT_TYPE_VERTEX_BUFFER_VIEW,   { { 1        } } },
-			{ D3D12_INDIRECT_ARGUMENT_TYPE_VERTEX_BUFFER_VIEW,   { { 2        } } },
-			{ D3D12_INDIRECT_ARGUMENT_TYPE_VERTEX_BUFFER_VIEW,   { { 3        } } },
-			{ D3D12_INDIRECT_ARGUMENT_TYPE_VERTEX_BUFFER_VIEW,   { { 4        } } },
-			{ D3D12_INDIRECT_ARGUMENT_TYPE_INDEX_BUFFER_VIEW,    { { 0        } } },
-			{ D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT_BUFFER_VIEW, { { Rdt::CBV } } },
-			{ D3D12_INDIRECT_ARGUMENT_TYPE_DRAW_INDEXED,         { { 0        } } },
+			{ D3D12_INDIRECT_ARGUMENT_TYPE_VERTEX_BUFFER_VIEW,   { { 0             } } },
+			{ D3D12_INDIRECT_ARGUMENT_TYPE_VERTEX_BUFFER_VIEW,   { { 1             } } },
+			{ D3D12_INDIRECT_ARGUMENT_TYPE_VERTEX_BUFFER_VIEW,   { { 2             } } },
+			{ D3D12_INDIRECT_ARGUMENT_TYPE_VERTEX_BUFFER_VIEW,   { { 3             } } },
+			{ D3D12_INDIRECT_ARGUMENT_TYPE_VERTEX_BUFFER_VIEW,   { { 4             } } },
+			{ D3D12_INDIRECT_ARGUMENT_TYPE_INDEX_BUFFER_VIEW,    { { 0             } } },
+			{ D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT_BUFFER_VIEW, { { RenderRp::CBV } } },
+			{ D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT_BUFFER_VIEW, { { RenderRp::CBF } } },
+			{ D3D12_INDIRECT_ARGUMENT_TYPE_DRAW_INDEXED,         { { 0             } } },
 		};
 
 		D3D12_COMMAND_SIGNATURE_DESC drawIndexedCommandSignature =
@@ -4223,15 +4669,12 @@ namespace bgfx { namespace d3d12
 
 		if (UINT8_MAX != _draw.m_streamMask)
 		{
-			for (uint32_t idx = 0, streamMask = _draw.m_streamMask
-				; 0 != streamMask
-				; streamMask >>= 1, idx += 1, ++numStreams
+			for (BitMaskToIndexIteratorT it(_draw.m_streamMask)
+				; !it.isDone()
+				; it.next(), numStreams++
 				)
 			{
-				const uint32_t ntz = bx::uint32_cnttz(streamMask);
-				streamMask >>= ntz;
-				idx         += ntz;
-
+				const uint8_t idx = it.idx;
 				const Stream& stream = _draw.m_stream[idx];
 
 				uint16_t handle = stream.m_handle.idx;
@@ -4240,29 +4683,30 @@ namespace bgfx { namespace d3d12
 
 				const uint16_t layoutIdx = !isValid(vb.m_layoutHandle) ? stream.m_layoutHandle.idx : vb.m_layoutHandle.idx;
 				const VertexLayout& layout = s_renderD3D12->m_vertexLayouts[layoutIdx];
-				uint32_t stride = layout.m_stride;
-
-				D3D12_VERTEX_BUFFER_VIEW& vbv = _vbv[numStreams];
-				vbv.BufferLocation = vb.m_gpuVA + stream.m_startVertex * stride;
-				vbv.StrideInBytes  = layout.m_stride;
-				vbv.SizeInBytes    = vb.m_size;
+				const uint32_t stride = layout.m_stride;
 
 				_outNumVertices = bx::uint32_min(UINT32_MAX == _draw.m_numVertices
 					? vb.m_size/stride
 					: _draw.m_numVertices
 					, _outNumVertices
 					);
+
+				D3D12_VERTEX_BUFFER_VIEW& vbv = _vbv[numStreams];
+				vbv.BufferLocation = vb.m_gpuVA + stream.m_startVertex * stride;
+				vbv.StrideInBytes  = stride;
+				vbv.SizeInBytes    = _outNumVertices * stride;
 			}
 		}
 
 		return numStreams;
 	}
 
-	uint32_t BatchD3D12::draw(ID3D12GraphicsCommandList* _commandList, D3D12_GPU_VIRTUAL_ADDRESS _cbv, const RenderDraw& _draw)
+	uint32_t BatchD3D12::draw(ID3D12GraphicsCommandList* _commandList, D3D12_GPU_VIRTUAL_ADDRESS _cbv, D3D12_GPU_VIRTUAL_ADDRESS _cbf, const RenderDraw& _draw)
 	{
 		if (isValid(_draw.m_indirectBuffer) )
 		{
-			_commandList->SetGraphicsRootConstantBufferView(Rdt::CBV, _cbv);
+			_commandList->SetGraphicsRootConstantBufferView(RenderRp::CBV, _cbv);
+			_commandList->SetGraphicsRootConstantBufferView(RenderRp::CBF, _cbf);
 
 			D3D12_VERTEX_BUFFER_VIEW vbvs[BGFX_CONFIG_MAX_VERTEX_STREAMS+1];
 
@@ -4285,7 +4729,7 @@ namespace bgfx { namespace d3d12
 				);
 
 			const VertexBufferD3D12& indirect = s_renderD3D12->m_vertexBuffers[_draw.m_indirectBuffer.idx];
-			const uint32_t numDrawIndirect = UINT16_MAX == _draw.m_numIndirect
+			const uint32_t numDrawIndirect = UINT32_MAX == _draw.m_numIndirect
 				? indirect.m_size/BGFX_CONFIG_DRAW_INDIRECT_STRIDE
 				: _draw.m_numIndirect
 				;
@@ -4354,6 +4798,7 @@ namespace bgfx { namespace d3d12
 		{
 			DrawIndirectCommand& cmd = getCmd<DrawIndirectCommand>(Draw);
 			cmd.cbv = _cbv;
+			cmd.cbf = _cbf;
 
 			uint32_t numVertices;
 			uint8_t  numStreams = fill(_commandList, cmd.vbv, _draw, numVertices);
@@ -4371,7 +4816,7 @@ namespace bgfx { namespace d3d12
 			for (; numStreams < BX_COUNTOF(cmd.vbv); ++numStreams)
 			{
 				D3D12_VERTEX_BUFFER_VIEW* vbv = &cmd.vbv[numStreams];
-				bx::memSet(vbv, 0, sizeof(D3D12_VERTEX_BUFFER_VIEW));
+				bx::memSet(vbv, 0, sizeof(D3D12_VERTEX_BUFFER_VIEW) );
 			}
 
 			cmd.args.InstanceCount          = _draw.m_numInstances;
@@ -4395,6 +4840,7 @@ namespace bgfx { namespace d3d12
 
 			DrawIndexedIndirectCommand& cmd = getCmd<DrawIndexedIndirectCommand>(DrawIndexed);
 			cmd.cbv = _cbv;
+			cmd.cbf = _cbf;
 			cmd.ibv.BufferLocation = ib.m_gpuVA;
 			cmd.ibv.SizeInBytes    = ib.m_size;
 			cmd.ibv.Format         = indexFormat;
@@ -4415,7 +4861,7 @@ namespace bgfx { namespace d3d12
 			for (; numStreams < BX_COUNTOF(cmd.vbv); ++numStreams)
 			{
 				D3D12_VERTEX_BUFFER_VIEW* vbv = &cmd.vbv[numStreams];
-				bx::memSet(vbv, 0, sizeof(D3D12_VERTEX_BUFFER_VIEW));
+				bx::memSet(vbv, 0, sizeof(D3D12_VERTEX_BUFFER_VIEW) );
 			}
 
 			cmd.args.IndexCountPerInstance = numIndices;
@@ -4438,7 +4884,7 @@ namespace bgfx { namespace d3d12
 		sizeof(BatchD3D12::DrawIndirectCommand),
 		sizeof(BatchD3D12::DrawIndexedIndirectCommand),
 	};
-	BX_STATIC_ASSERT(BX_COUNTOF(s_indirectCommandSize) == BatchD3D12::Count);
+	static_assert(BX_COUNTOF(s_indirectCommandSize) == BatchD3D12::Count);
 
 	void BatchD3D12::flush(ID3D12GraphicsCommandList* _commandList, Enum _type)
 	{
@@ -4478,7 +4924,8 @@ namespace bgfx { namespace d3d12
 						if (m_current.cbv != cmd.cbv)
 						{
 							m_current.cbv = cmd.cbv;
-							_commandList->SetGraphicsRootConstantBufferView(Rdt::CBV, cmd.cbv);
+							_commandList->SetGraphicsRootConstantBufferView(RenderRp::CBV, cmd.cbv);
+							_commandList->SetGraphicsRootConstantBufferView(RenderRp::CBF, cmd.cbf);
 						}
 
 						if (0 != bx::memCmp(m_current.vbv, cmd.vbv, sizeof(cmd.vbv) ) )
@@ -4508,7 +4955,8 @@ namespace bgfx { namespace d3d12
 						if (m_current.cbv != cmd.cbv)
 						{
 							m_current.cbv = cmd.cbv;
-							_commandList->SetGraphicsRootConstantBufferView(Rdt::CBV, cmd.cbv);
+							_commandList->SetGraphicsRootConstantBufferView(RenderRp::CBV, cmd.cbv);
+							_commandList->SetGraphicsRootConstantBufferView(RenderRp::CBF, cmd.cbf);
 						}
 
 						if (0 != bx::memCmp(m_current.vbv, cmd.vbv, sizeof(cmd.vbv) ) )
@@ -4819,7 +5267,7 @@ namespace bgfx { namespace d3d12
 						}
 
 						kind = "user";
-						m_constantBuffer->writeUniformHandle( (UniformType::Enum)(type|fragmentBit), regIndex, info->m_handle, regCount);
+						m_constantBuffer->writeUniformHandle(type|fragmentBit, regIndex, info->m_handle, regCount);
 					}
 				}
 				else
@@ -5020,7 +5468,7 @@ namespace bgfx { namespace d3d12
 		return result;
 	}
 
-	void* TextureD3D12::create(const Memory* _mem, uint64_t _flags, uint8_t _skip)
+	void* TextureD3D12::create(const Memory* _mem, uint64_t _flags, uint8_t _skip, uint64_t _external)
 	{
 		bimg::ImageContainer imageContainer;
 
@@ -5068,17 +5516,18 @@ namespace bgfx { namespace d3d12
 			m_numMips = ti.numMips;
 			const uint16_t numSides = ti.numLayers * (imageContainer.m_cubeMap ? 6 : 1);
 			const uint32_t numSrd   = numSides * ti.numMips;
-			D3D12_SUBRESOURCE_DATA* srd = (D3D12_SUBRESOURCE_DATA*)alloca(numSrd*sizeof(D3D12_SUBRESOURCE_DATA) );
+			D3D12_SUBRESOURCE_DATA* srd = (D3D12_SUBRESOURCE_DATA*)BX_STACK_ALLOC(numSrd*sizeof(D3D12_SUBRESOURCE_DATA) );
 
 			uint32_t kk = 0;
 
 			const bool compressed = bimg::isCompressed(bimg::TextureFormat::Enum(m_textureFormat) );
 			const bool swizzle    = TextureFormat::BGRA8 == m_textureFormat && 0 != (m_flags&BGFX_TEXTURE_COMPUTE_WRITE);
 
-			const bool writeOnly    = 0 != (m_flags&BGFX_TEXTURE_RT_WRITE_ONLY);
-			const bool computeWrite = 0 != (m_flags&BGFX_TEXTURE_COMPUTE_WRITE);
-			const bool renderTarget = 0 != (m_flags&BGFX_TEXTURE_RT_MASK);
-			const bool blit         = 0 != (m_flags&BGFX_TEXTURE_BLIT_DST);
+			const bool writeOnly      = 0 != (m_flags & BGFX_TEXTURE_RT_WRITE_ONLY);
+			const bool computeWrite   = 0 != (m_flags & BGFX_TEXTURE_COMPUTE_WRITE);
+			const bool renderTarget   = 0 != (m_flags & BGFX_TEXTURE_RT_MASK);
+			const bool blit           = 0 != (m_flags & BGFX_TEXTURE_BLIT_DST);
+			const bool externalShared = 0 != (m_flags & BGFX_TEXTURE_EXTERNAL_SHARED);
 
 			const uint32_t msaaQuality = bx::uint32_satsub((m_flags & BGFX_TEXTURE_RT_MSAA_MASK) >> BGFX_TEXTURE_RT_MSAA_SHIFT, 1);
 			const DXGI_SAMPLE_DESC& msaa = s_msaa[msaaQuality];
@@ -5209,7 +5658,7 @@ namespace bgfx { namespace d3d12
 				state              |= D3D12_RESOURCE_STATE_DEPTH_WRITE;
 				state              &= ~D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 
-				clearValue = (D3D12_CLEAR_VALUE*)alloca(sizeof(D3D12_CLEAR_VALUE) );
+				clearValue = (D3D12_CLEAR_VALUE*)BX_STACK_ALLOC(sizeof(D3D12_CLEAR_VALUE) );
 				clearValue->Format = tfi.m_fmtDsv;
 				clearValue->DepthStencil.Depth   = 1.0f;
 				clearValue->DepthStencil.Stencil = 0;
@@ -5220,7 +5669,7 @@ namespace bgfx { namespace d3d12
 				state              |= D3D12_RESOURCE_STATE_RENDER_TARGET;
 				state              &= ~D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 
-				clearValue = (D3D12_CLEAR_VALUE*)alloca(sizeof(D3D12_CLEAR_VALUE) );
+				clearValue = (D3D12_CLEAR_VALUE*)BX_STACK_ALLOC(sizeof(D3D12_CLEAR_VALUE) );
 				clearValue->Format = resourceDesc.Format;
 				clearValue->Color[0] = 0.0f;
 				clearValue->Color[1] = 0.0f;
@@ -5348,7 +5797,46 @@ namespace bgfx { namespace d3d12
 				break;
 			}
 
-			m_ptr = createCommittedResource(device, HeapProperty::Texture, &resourceDesc, clearValue, renderTarget);
+			if (0 != _external)
+			{
+				if (externalShared)
+				{
+					DX_CHECK(device->OpenSharedHandle(HANDLE(_external), IID_ID3D12Resource, (void**)&m_ptr) );
+				}
+				else
+				{
+					m_ptr = (ID3D12Resource*)_external;
+				}
+
+				m_flags |= BGFX_SAMPLER_INTERNAL_SHARED;
+				m_state  = D3D12_RESOURCE_STATE_COMMON;
+
+				s_renderD3D12->m_cmd.addExternal({ uint16_t(this - s_renderD3D12->m_textures) });
+			}
+			else
+			{
+				m_ptr = createCommittedResource(
+					  device
+					, HeapProperty::Texture
+					, &resourceDesc
+					, clearValue
+					, renderTarget
+					, externalShared
+						? D3D12_HEAP_FLAG_SHARED
+						: D3D12_HEAP_FLAG_NONE
+					);
+
+				if (externalShared)
+				{
+					DX_CHECK(device->CreateSharedHandle(
+						  m_ptr
+						, NULL
+						, GENERIC_ALL
+						, NULL
+						, &m_handle
+						) );
+				}
+			}
 
 			if (directAccess)
 			{
@@ -5378,10 +5866,6 @@ namespace bgfx { namespace d3d12
 				setState(commandList, state);
 
 				s_renderD3D12->m_cmd.release(staging);
-			}
-			else
-			{
-				setState(commandList, state);
 			}
 
 			if (0 != kk)
@@ -5429,17 +5913,33 @@ namespace bgfx { namespace d3d12
 				m_directAccessPtr = NULL;
 			}
 
-			if (0 == (m_flags & BGFX_SAMPLER_INTERNAL_SHARED))
+			const bool external       = 0 != (m_flags & BGFX_SAMPLER_INTERNAL_SHARED);
+			const bool externalShared = 0 != (m_flags & BGFX_TEXTURE_EXTERNAL_SHARED);
+
+			if (externalShared)
+			{
+#if !BX_PLATFORM_LINUX
+				CloseHandle(m_handle);
+				m_handle = NULL;
+#endif // !BX_PLATFORM_LINUX
+			}
+
+			if (external)
+			{
+				s_renderD3D12->m_cmd.removeExternal({ uint16_t(this - s_renderD3D12->m_textures) });
+			}
+			else
 			{
 				s_renderD3D12->m_cmd.release(m_ptr);
-				m_ptr   = NULL;
-				m_state = D3D12_RESOURCE_STATE_COMMON;
+			}
 
-				if (NULL != m_singleMsaa)
-				{
-					s_renderD3D12->m_cmd.release(m_singleMsaa);
-					m_singleMsaa = NULL;
-				}
+			m_ptr   = NULL;
+			m_state = D3D12_RESOURCE_STATE_COMMON;
+
+			if (NULL != m_singleMsaa)
+			{
+				s_renderD3D12->m_cmd.release(m_singleMsaa);
+				m_singleMsaa = NULL;
 			}
 		}
 	}
@@ -5457,9 +5957,9 @@ namespace bgfx { namespace d3d12
 
 		const uint32_t bpp    = bimg::getBitsPerPixel(bimg::TextureFormat::Enum(m_textureFormat) );
 		uint32_t rectpitch    = _rect.m_width*bpp/8;
-		if (bimg::isCompressed(bimg::TextureFormat::Enum(m_textureFormat)))
+		if (bimg::isCompressed(bimg::TextureFormat::Enum(m_textureFormat) ) )
 		{
-			const bimg::ImageBlockInfo& blockInfo = bimg::getBlockInfo(bimg::TextureFormat::Enum(m_textureFormat));
+			const bimg::ImageBlockInfo& blockInfo = bimg::getBlockInfo(bimg::TextureFormat::Enum(m_textureFormat) );
 			rectpitch = (_rect.m_width / blockInfo.blockWidth) * blockInfo.blockSize;
 		}
 
@@ -5496,7 +5996,7 @@ namespace bgfx { namespace d3d12
 		if (convert)
 		{
 			temp = (uint8_t*)bx::alloc(g_allocator, slicepitch);
-			bimg::imageDecodeToBgra8(g_allocator, temp, srcData, _rect.m_width, _rect.m_height, srcpitch, bimg::TextureFormat::Enum(m_requestedFormat));
+			bimg::imageDecodeToBgra8(g_allocator, temp, srcData, _rect.m_width, _rect.m_height, srcpitch, bimg::TextureFormat::Enum(m_requestedFormat) );
 			srcData = temp;
 
 			box.right  = bx::max(1u, m_width  >> _mip);
@@ -5529,10 +6029,7 @@ namespace bgfx { namespace d3d12
 		D3D12_RANGE readRange = { 0, 0 };
 		DX_CHECK(staging->Map(0, &readRange, (void**)&dstData) );
 
-		for (uint32_t ii = 0, height = numRows; ii < height; ++ii)
-		{
-			bx::memCopy(&dstData[ii*rowPitch], &srcData[ii*srcpitch], srcpitch);
-		}
+		bx::memCopy(dstData, rowPitch, srcData, srcpitch, rectpitch, numRows);
 
 		if (NULL != temp)
 		{
@@ -6002,24 +6499,32 @@ namespace bgfx { namespace d3d12
 
 	void TimerQueryD3D12::init()
 	{
-		D3D12_QUERY_HEAP_DESC queryHeapDesc;
-		queryHeapDesc.Count    = m_control.m_size * 2;
-		queryHeapDesc.NodeMask = 1;
-		queryHeapDesc.Type     = D3D12_QUERY_HEAP_TYPE_TIMESTAMP;
-		DX_CHECK(s_renderD3D12->m_device->CreateQueryHeap(&queryHeapDesc
+		ID3D12Device* device = s_renderD3D12->m_device;
+
+		D3D12_QUERY_HEAP_DESC queryHeapDesc =
+		{
+			.Type     = D3D12_QUERY_HEAP_TYPE_TIMESTAMP,
+			.Count    = m_control.m_size * 2,
+			.NodeMask = 1,
+		};
+
+		DX_CHECK(device->CreateQueryHeap(
+			  &queryHeapDesc
 			, IID_ID3D12QueryHeap
 			, (void**)&m_queryHeap
 			) );
+		setDebugObjectName(m_queryHeap, "Timer Query Heap");
 
 		const uint32_t size = queryHeapDesc.Count*sizeof(uint64_t);
-		m_readback = createCommittedResource(s_renderD3D12->m_device
+		m_readback = createCommittedResource(device
 			, HeapProperty::ReadBack
 			, size
 			);
+		setDebugObjectName(m_readback, "Timer Query Read-Back");
 
 		DX_CHECK(s_renderD3D12->m_cmd.m_commandQueue->GetTimestampFrequency(&m_frequency) );
 
-		D3D12_RANGE range = { 0, size };
+		D3D12_RANGE range = { .Begin = 0, .End = size };
 		m_readback->Map(0, &range, (void**)&m_queryResult);
 
 		for (uint32_t ii = 0; ii < BX_COUNTOF(m_result); ++ii)
@@ -6042,6 +6547,8 @@ namespace bgfx { namespace d3d12
 
 	uint32_t TimerQueryD3D12::begin(uint32_t _resultIdx, uint32_t _frameNum)
 	{
+		ID3D12GraphicsCommandList* commandList = s_renderD3D12->m_commandList;
+
 		while (0 == m_control.reserve(1) )
 		{
 			m_control.consume(1);
@@ -6056,8 +6563,6 @@ namespace bgfx { namespace d3d12
 		query.m_ready     = false;
 		query.m_frameNum  = _frameNum;
 
-		ID3D12GraphicsCommandList* commandList = s_renderD3D12->m_commandList;
-
 		uint32_t offset = idx * 2 + 0;
 		commandList->EndQuery(m_queryHeap
 			, D3D12_QUERY_TYPE_TIMESTAMP
@@ -6071,12 +6576,12 @@ namespace bgfx { namespace d3d12
 
 	void TimerQueryD3D12::end(uint32_t _idx)
 	{
+		ID3D12GraphicsCommandList* commandList = s_renderD3D12->m_commandList;
+
 		Query& query = m_query[_idx];
 		query.m_ready = true;
 		query.m_fence = s_renderD3D12->m_cmd.m_currentFence - 1;
 		uint32_t offset = _idx * 2;
-
-		ID3D12GraphicsCommandList* commandList = s_renderD3D12->m_commandList;
 
 		commandList->EndQuery(m_queryHeap
 			, D3D12_QUERY_TYPE_TIMESTAMP
@@ -6097,7 +6602,7 @@ namespace bgfx { namespace d3d12
 
 	bool TimerQueryD3D12::update()
 	{
-		if (0 != m_control.available() )
+		if (0 != m_control.getNumUsed() )
 		{
 			uint32_t idx = m_control.m_read;
 			Query& query = m_query[idx];
@@ -6140,10 +6645,11 @@ namespace bgfx { namespace d3d12
 			) );
 
 		const uint32_t size = BX_COUNTOF(m_handle)*sizeof(uint64_t);
-		m_readback = createCommittedResource(s_renderD3D12->m_device
-						, HeapProperty::ReadBack
-						, size
-						);
+		m_readback = createCommittedResource(
+			  s_renderD3D12->m_device
+			, HeapProperty::ReadBack
+			, size
+			);
 
 		D3D12_RANGE range = { 0, size };
 		m_readback->Map(0, &range, (void**)&m_result);
@@ -6198,7 +6704,7 @@ namespace bgfx { namespace d3d12
 	{
 		const uint32_t size = m_control.m_size;
 
-		for (uint32_t ii = 0, num = m_control.available(); ii < num; ++ii)
+		for (uint32_t ii = 0, num = m_control.getNumUsed(); ii < num; ++ii)
 		{
 			OcclusionQueryHandle& handle = m_handle[(m_control.m_read + ii) % size];
 			if (handle.idx == _handle.idx)
@@ -6334,6 +6840,16 @@ namespace bgfx { namespace d3d12
 		}
 	}
 
+	void RendererContextD3D12::submitUniformCache(UniformCacheState& _ucs, uint16_t _view)
+	{
+		while (_ucs.hasItem(_view) )
+		{
+			const UniformCacheItem& uci = _ucs.advance();
+
+			bx::memCopy(m_uniforms[uci.m_handle], &_ucs.m_frame->m_uniformCacheFrame.m_data[uci.m_offset], uci.m_size);
+		}
+	}
+
 	void RendererContextD3D12::submit(Frame* _render, ClearQuad& /*_clearQuad*/, TextVideoMemBlitter& _textVideoMemBlitter)
 	{
 		if (m_lost
@@ -6381,9 +6897,6 @@ namespace bgfx { namespace d3d12
 		static ViewState viewState;
 		viewState.reset(_render);
 
-// 		bool wireframe = !!(_render->m_debug&BGFX_DEBUG_WIREFRAME);
-// 		setDebugWireframe(wireframe);
-
 		uint16_t currentSamplerStateIdx = kInvalidHandle;
 		ProgramHandle currentProgram    = BGFX_INVALID_HANDLE;
 		uint32_t currentBindHash        = 0;
@@ -6394,6 +6907,7 @@ namespace bgfx { namespace d3d12
 		uint16_t view = UINT16_MAX;
 		FrameBufferHandle fbh = { BGFX_CONFIG_MAX_FRAME_BUFFERS };
 
+		UniformCacheState ucs(_render);
 		BlitState bs(_render);
 
 		uint32_t blendFactor = 0;
@@ -6520,12 +7034,14 @@ namespace bgfx { namespace d3d12
 
 					profiler.begin(view);
 
+					const View& renderView = _render->m_view[view];
+
 					fbh = _render->m_view[view].m_fbh;
 					setFrameBuffer(fbh);
 
-					viewState.m_rect = _render->m_view[view].m_rect;
-					const Rect& rect        = _render->m_view[view].m_rect;
-					const Rect& scissorRect = _render->m_view[view].m_scissor;
+					viewState.m_rect = renderView.m_rect;
+					const Rect& rect        = renderView.m_rect;
+					const Rect& scissorRect = renderView.m_scissor;
 					viewHasScissor  = !scissorRect.isZero();
 					viewScissorRect = viewHasScissor ? scissorRect : rect;
 
@@ -6546,7 +7062,7 @@ namespace bgfx { namespace d3d12
 					m_commandList->RSSetScissorRects(1, &rc);
 					restoreScissor = false;
 
-					Clear& clr = _render->m_view[view].m_clear;
+					const Clear& clr = renderView.m_clear;
 					if (BGFX_CLEAR_NONE != clr.m_flags)
 					{
 						Rect clearRect = rect;
@@ -6556,7 +7072,13 @@ namespace bgfx { namespace d3d12
 
 					prim = s_primInfo[Topology::Count]; // Force primitive type update.
 
+					submitUniformCache(ucs, view);
 					submitBlit(bs, view);
+
+					if (m_variableRateShadingSupport)
+					{
+						reinterpret_cast<ID3D12GraphicsCommandList5*>(m_commandList)->RSSetShadingRate(s_shadingRate[renderView.m_shadingRate], NULL);
+					}
 				}
 
 				if (isCompute)
@@ -6576,7 +7098,7 @@ namespace bgfx { namespace d3d12
 					{
 						commandListChanged = false;
 
-						m_commandList->SetComputeRootSignature(m_rootSignature);
+						m_commandList->SetComputeRootSignature(m_computeRootSignature);
 						ID3D12DescriptorHeap* heaps[] = {
 							m_samplerAllocator.getHeap(),
 							scratchBuffer.getHeap(),
@@ -6695,10 +7217,10 @@ namespace bgfx { namespace d3d12
 							if (samplerStateIdx != currentSamplerStateIdx)
 							{
 								currentSamplerStateIdx = samplerStateIdx;
-								m_commandList->SetComputeRootDescriptorTable(Rdt::Sampler, m_samplerAllocator.get(samplerStateIdx) );
+								m_commandList->SetComputeRootDescriptorTable(ComputeRp::Sampler, m_samplerAllocator.get(samplerStateIdx) );
 							}
-							m_commandList->SetComputeRootDescriptorTable(Rdt::SRV, bindCached->m_srvHandle);
-							m_commandList->SetComputeRootDescriptorTable(Rdt::UAV, bindCached->m_srvHandle);
+							m_commandList->SetComputeRootDescriptorTable(ComputeRp::SRV, bindCached->m_srvHandle);
+							m_commandList->SetComputeRootDescriptorTable(ComputeRp::UAV, bindCached->m_srvHandle);
 						}
 					}
 
@@ -6727,14 +7249,14 @@ namespace bgfx { namespace d3d12
 						ProgramD3D12& program = m_program[currentProgram.idx];
 						viewState.setPredefined<4>(this, view, program, _render, compute);
 						commitShaderConstants(key.m_program, gpuAddress);
-						m_commandList->SetComputeRootConstantBufferView(Rdt::CBV, gpuAddress);
+						m_commandList->SetComputeRootConstantBufferView(ComputeRp::CBV, gpuAddress);
 					}
 
 					if (isValid(compute.m_indirectBuffer) )
 					{
 						const VertexBufferD3D12& indirect = m_vertexBuffers[compute.m_indirectBuffer.idx];
 
-						uint32_t numDrawIndirect = UINT16_MAX == compute.m_numIndirect
+						uint32_t numDrawIndirect = UINT32_MAX == compute.m_numIndirect
 							? indirect.m_size/BGFX_CONFIG_DRAW_INDIRECT_STRIDE
 							: compute.m_numIndirect
 							;
@@ -6860,14 +7382,12 @@ namespace bgfx { namespace d3d12
 					uint8_t numStreams = 0;
 					if (UINT8_MAX != draw.m_streamMask)
 					{
-						for (uint32_t idx = 0, streamMask = draw.m_streamMask
-							; 0 != streamMask
-							; streamMask >>= 1, idx += 1, ++numStreams
+						for (BitMaskToIndexIteratorT it(draw.m_streamMask)
+							; !it.isDone()
+							; it.next(), numStreams++
 							)
 						{
-							const uint32_t ntz = bx::uint32_cnttz(streamMask);
-							streamMask >>= ntz;
-							idx         += ntz;
+							const uint8_t idx = it.idx;
 
 							currentState.m_stream[idx].m_layoutHandle = draw.m_stream[idx].m_layoutHandle;
 							currentState.m_stream[idx].m_handle       = draw.m_stream[idx].m_handle;
@@ -7009,11 +7529,11 @@ namespace bgfx { namespace d3d12
 							if (samplerStateIdx != currentSamplerStateIdx)
 							{
 								currentSamplerStateIdx = samplerStateIdx;
-								m_commandList->SetGraphicsRootDescriptorTable(Rdt::Sampler, m_samplerAllocator.get(samplerStateIdx) );
+								m_commandList->SetGraphicsRootDescriptorTable(RenderRp::Sampler, m_samplerAllocator.get(samplerStateIdx) );
 							}
 
-							m_commandList->SetGraphicsRootDescriptorTable(Rdt::SRV, bindCached->m_srvHandle);
-							m_commandList->SetGraphicsRootDescriptorTable(Rdt::UAV, bindCached->m_srvHandle);
+							m_commandList->SetGraphicsRootDescriptorTable(RenderRp::SRV, bindCached->m_srvHandle);
+							m_commandList->SetGraphicsRootDescriptorTable(RenderRp::UAV, bindCached->m_srvHandle);
 						}
 					}
 
@@ -7126,7 +7646,7 @@ namespace bgfx { namespace d3d12
 						commitShaderConstants(key.m_program, gpuAddress);
 					}
 
-					uint32_t numIndices        = m_batch.draw(m_commandList, gpuAddress, draw);
+					uint32_t numIndices        = m_batch.draw(m_commandList, gpuAddress, gpuAddress + m_program[currentProgram.idx].m_vsh->m_size, draw);
 					uint32_t numPrimsSubmitted = numIndices / prim.m_div - prim.m_sub;
 					uint32_t numPrimsRendered  = numPrimsSubmitted*draw.m_numInstances;
 
@@ -7202,7 +7722,7 @@ namespace bgfx { namespace d3d12
 			maxGpuLatency = bx::uint32_imax(maxGpuLatency, result.m_pending-1);
 		}
 
-		maxGpuLatency = bx::uint32_imax(maxGpuLatency, m_gpuTimer.m_control.available()-1);
+		maxGpuLatency = bx::uint32_imax(maxGpuLatency, m_gpuTimer.m_control.getNumUsed()-1);
 
 		const int64_t timerFreq = bx::getHPFrequency();
 
@@ -7236,7 +7756,6 @@ namespace bgfx { namespace d3d12
 		{
 			BGFX_D3D12_PROFILER_BEGIN_LITERAL("debugstats", kColorFrame);
 
-//			m_needPresent = true;
 			TextVideoMem& tvm = m_textVideoMem;
 
 			static int64_t next = timeEnd;
@@ -7341,12 +7860,17 @@ namespace bgfx { namespace d3d12
 					);
 
 				double elapsedCpuMs = double(frameTime)*toMs;
-				tvm.printf(10, pos++, 0x8b, "   Submitted: %5d (draw %5d, compute %4d) / CPU %7.4f [ms] "
+				tvm.printf(10, pos++, 0x8b, "   Submitted: %5d (draw %5d, compute %4d) / CPU %7.4f [ms] %c GPU %7.4f [ms] (latency %d) "
 					, _render->m_numRenderItems
 					, statsKeyType[0]
 					, statsKeyType[1]
 					, elapsedCpuMs
+					, elapsedCpuMs > maxGpuElapsed ? '>' : '<'
+					, maxGpuElapsed
+					, maxGpuLatency
 					);
+				maxGpuLatency = 0;
+				maxGpuElapsed = 0.0;
 
 				for (uint32_t ii = 0; ii < Topology::Count; ++ii)
 				{
@@ -7376,7 +7900,6 @@ namespace bgfx { namespace d3d12
 				}
 
 				tvm.printf(10, pos++, 0x8b, "      Indices: %7d ", statsNumIndices);
-//				tvm.printf(10, pos++, 0x8b, " Uniform size: %7d, Max: %7d ", _render->m_uniformEnd, _render->m_uniformMax);
 				tvm.printf(10, pos++, 0x8b, "     DVB size: %7d ", _render->m_vboffset);
 				tvm.printf(10, pos++, 0x8b, "     DIB size: %7d ", _render->m_iboffset);
 
@@ -7387,8 +7910,19 @@ namespace bgfx { namespace d3d12
 					, m_pipelineStateCache.getCount()
 					, m_samplerStateCache.getCount()
 					, bindLru.getCount()
-					, m_cmd.m_control.available()
+					, m_cmd.m_control.getNumUsed()
 					);
+				pos++;
+
+				tvm.printf(10, pos++, 0x8b, " Pipeline Statistics:");
+				const CommandQueueD3D12::PipelineStats& pipelineStats = m_cmd.m_pipelineStatsSum;
+				tvm.printf(10, pos++, 0x8b, "     IAVertices: %llu", pipelineStats.IAVertices);
+				tvm.printf(10, pos++, 0x8b, "   IAPrimitives: %llu", pipelineStats.IAPrimitives);
+				tvm.printf(10, pos++, 0x8b, "  VSInvocations: %llu", pipelineStats.VSInvocations);
+				tvm.printf(10, pos++, 0x8b, "   CInvocations: %llu", pipelineStats.CInvocations);
+				tvm.printf(10, pos++, 0x8b, "    CPrimitives: %llu", pipelineStats.CPrimitives);
+				tvm.printf(10, pos++, 0x8b, "  PSInvocations: %llu", pipelineStats.PSInvocations);
+				tvm.printf(10, pos++, 0x8b, "  CSInvocations: %llu", pipelineStats.CSInvocations);
 				pos++;
 
 				double captureMs = double(captureElapsed)*toMs;
@@ -7406,7 +7940,7 @@ namespace bgfx { namespace d3d12
 				presentMax = m_presentElapsed;
 			}
 
-			blit(this, _textVideoMemBlitter, tvm);
+			dbgTextSubmit(this, _textVideoMemBlitter, tvm);
 
 			BGFX_D3D12_PROFILER_END();
 		}
@@ -7414,7 +7948,7 @@ namespace bgfx { namespace d3d12
 		{
 			BGFX_D3D12_PROFILER_BEGIN_LITERAL("debugtext", kColorFrame);
 
-			blit(this, _textVideoMemBlitter, _render->m_textVideoMem);
+			dbgTextSubmit(this, _textVideoMemBlitter, _render->m_textVideoMem);
 
 			BGFX_D3D12_PROFILER_END();
 		}
@@ -7459,6 +7993,7 @@ namespace bgfx { namespace d3d12
 #endif // BX_PLATFORM_WINDOWS
 
 		m_backBufferColorFence[m_backBufferColorIdx] = kick();
+		m_cmd.m_pipelineStatsSum.reset();
 	}
 
 } /* namespace d3d12 */ } // namespace bgfx

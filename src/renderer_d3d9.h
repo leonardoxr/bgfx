@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2023 Branimir Karadzic. All rights reserved.
+ * Copyright 2011-2026 Branimir Karadzic. All rights reserved.
  * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
  */
 
@@ -257,7 +257,7 @@ namespace bgfx { namespace d3d9
 
 			switch (m_type)
 			{
-			case 0:  DX_RELEASE(m_vertexShader, 0); BX_FALLTHROUGH;
+			case 0:  DX_RELEASE(m_vertexShader, 0); [[fallthrough]];
 			default: DX_RELEASE(m_pixelShader,  0);
 			}
 		}

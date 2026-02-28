@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2023 Branimir Karadzic. All rights reserved.
+ * Copyright 2011-2026 Branimir Karadzic. All rights reserved.
  * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
  */
 
@@ -65,7 +65,8 @@ namespace entry
 					char path[PATH_MAX];
 					if (CFURLGetFileSystemRepresentation(resourcesURL, TRUE, (UInt8*)path, PATH_MAX) )
 					{
-						chdir(path);
+						// This breaks console apps, but it's not needed on windowed.
+						//chdir(path);
 					}
 
 					CFRelease(resourcesURL);
@@ -500,7 +501,7 @@ namespace entry
 			mte.m_argv = _argv;
 
 			bx::Thread thread;
-			thread.init(mte.threadFunc, &mte);
+			thread.init(mte.threadFunc, &mte, 0, "Entry Thread");
 
 			WindowHandle handle = { 0 };
 			NSRect contentRect = [m_window[0] contentRectForFrameRect: m_windowFrame];
@@ -725,9 +726,8 @@ namespace entry
 		return NULL;
 	}
 
-	bgfx::NativeWindowHandleType::Enum getNativeWindowHandleType(WindowHandle _handle)
+	bgfx::NativeWindowHandleType::Enum getNativeWindowHandleType()
 	{
-		BX_UNUSED(_handle);
 		return bgfx::NativeWindowHandleType::Default;
 	}
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2023 Branimir Karadzic. All rights reserved.
+ * Copyright 2011-2026 Branimir Karadzic. All rights reserved.
  * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
  */
 
@@ -15,7 +15,7 @@
 #ifndef BGFX_DEFINES_H_HEADER_GUARD
 #define BGFX_DEFINES_H_HEADER_GUARD
 
-#define BGFX_API_VERSION UINT32_C(122)
+#define BGFX_API_VERSION UINT32_C(140)
 
 /**
  * Color RGB/alpha/depth write. When it's not specified write will be disabled.
@@ -277,15 +277,15 @@
 #define BGFX_DEBUG_TEXT                           UINT32_C(0x00000008) //!< Enable debug text display.
 #define BGFX_DEBUG_PROFILER                       UINT32_C(0x00000010) //!< Enable profiler. This causes per-view statistics to be collected, available through `bgfx::Stats::ViewStats`. This is unrelated to the profiler functions in `bgfx::CallbackI`.
 
-#define BGFX_BUFFER_COMPUTE_FORMAT_8X1            UINT16_C(0x0001) //!< 1 8-bit value
-#define BGFX_BUFFER_COMPUTE_FORMAT_8X2            UINT16_C(0x0002) //!< 2 8-bit values
-#define BGFX_BUFFER_COMPUTE_FORMAT_8X4            UINT16_C(0x0003) //!< 4 8-bit values
-#define BGFX_BUFFER_COMPUTE_FORMAT_16X1           UINT16_C(0x0004) //!< 1 16-bit value
-#define BGFX_BUFFER_COMPUTE_FORMAT_16X2           UINT16_C(0x0005) //!< 2 16-bit values
-#define BGFX_BUFFER_COMPUTE_FORMAT_16X4           UINT16_C(0x0006) //!< 4 16-bit values
-#define BGFX_BUFFER_COMPUTE_FORMAT_32X1           UINT16_C(0x0007) //!< 1 32-bit value
-#define BGFX_BUFFER_COMPUTE_FORMAT_32X2           UINT16_C(0x0008) //!< 2 32-bit values
-#define BGFX_BUFFER_COMPUTE_FORMAT_32X4           UINT16_C(0x0009) //!< 4 32-bit values
+#define BGFX_BUFFER_COMPUTE_FORMAT_8X1            UINT16_C(0x0001) //!< 1 x 8-bit value
+#define BGFX_BUFFER_COMPUTE_FORMAT_8X2            UINT16_C(0x0002) //!< 2 x 8-bit values
+#define BGFX_BUFFER_COMPUTE_FORMAT_8X4            UINT16_C(0x0003) //!< 4 x 8-bit values
+#define BGFX_BUFFER_COMPUTE_FORMAT_16X1           UINT16_C(0x0004) //!< 1 x 16-bit value
+#define BGFX_BUFFER_COMPUTE_FORMAT_16X2           UINT16_C(0x0005) //!< 2 x 16-bit values
+#define BGFX_BUFFER_COMPUTE_FORMAT_16X4           UINT16_C(0x0006) //!< 4 x 16-bit values
+#define BGFX_BUFFER_COMPUTE_FORMAT_32X1           UINT16_C(0x0007) //!< 1 x 32-bit value
+#define BGFX_BUFFER_COMPUTE_FORMAT_32X2           UINT16_C(0x0008) //!< 2 x 32-bit values
+#define BGFX_BUFFER_COMPUTE_FORMAT_32X4           UINT16_C(0x0009) //!< 4 x 32-bit values
 #define BGFX_BUFFER_COMPUTE_FORMAT_SHIFT          0
 
 #define BGFX_BUFFER_COMPUTE_FORMAT_MASK           UINT16_C(0x000f)
@@ -316,6 +316,7 @@
 #define BGFX_TEXTURE_SRGB                         UINT64_C(0x0000200000000000) //!< Sample texture as sRGB.
 #define BGFX_TEXTURE_BLIT_DST                     UINT64_C(0x0000400000000000) //!< Texture will be used as blit destination.
 #define BGFX_TEXTURE_READ_BACK                    UINT64_C(0x0000800000000000) //!< Texture will be used for read back from GPU.
+#define BGFX_TEXTURE_EXTERNAL_SHARED              UINT64_C(0x0001000000000000) //!< Texture is shared with other device or other process.
 
 #define BGFX_TEXTURE_RT_MSAA_X2                   UINT64_C(0x0000002000000000) //!< Render target MSAAx2 mode.
 #define BGFX_TEXTURE_RT_MSAA_X4                   UINT64_C(0x0000003000000000) //!< Render target MSAAx4 mode.
@@ -467,32 +468,35 @@
 #define BGFX_CAPS_COMPUTE                         UINT64_C(0x0000000000000004) //!< Compute shaders are supported.
 #define BGFX_CAPS_CONSERVATIVE_RASTER             UINT64_C(0x0000000000000008) //!< Conservative rasterization is supported.
 #define BGFX_CAPS_DRAW_INDIRECT                   UINT64_C(0x0000000000000010) //!< Draw indirect is supported.
-#define BGFX_CAPS_FRAGMENT_DEPTH                  UINT64_C(0x0000000000000020) //!< Fragment depth is available in fragment shader.
-#define BGFX_CAPS_FRAGMENT_ORDERING               UINT64_C(0x0000000000000040) //!< Fragment ordering is available in fragment shader.
-#define BGFX_CAPS_GRAPHICS_DEBUGGER               UINT64_C(0x0000000000000080) //!< Graphics debugger is present.
-#define BGFX_CAPS_HDR10                           UINT64_C(0x0000000000000100) //!< HDR10 rendering is supported.
-#define BGFX_CAPS_HIDPI                           UINT64_C(0x0000000000000200) //!< HiDPI rendering is supported.
-#define BGFX_CAPS_IMAGE_RW                        UINT64_C(0x0000000000000400) //!< Image Read/Write is supported.
-#define BGFX_CAPS_INDEX32                         UINT64_C(0x0000000000000800) //!< 32-bit indices are supported.
-#define BGFX_CAPS_INSTANCING                      UINT64_C(0x0000000000001000) //!< Instancing is supported.
-#define BGFX_CAPS_OCCLUSION_QUERY                 UINT64_C(0x0000000000002000) //!< Occlusion query is supported.
-#define BGFX_CAPS_RENDERER_MULTITHREADED          UINT64_C(0x0000000000004000) //!< Renderer is on separate thread.
-#define BGFX_CAPS_SWAP_CHAIN                      UINT64_C(0x0000000000008000) //!< Multiple windows are supported.
-#define BGFX_CAPS_TEXTURE_2D_ARRAY                UINT64_C(0x0000000000010000) //!< 2D texture array is supported.
-#define BGFX_CAPS_TEXTURE_3D                      UINT64_C(0x0000000000020000) //!< 3D textures are supported.
+#define BGFX_CAPS_DRAW_INDIRECT_COUNT             UINT64_C(0x0000000000000020) //!< Draw indirect with indirect count is supported.
+#define BGFX_CAPS_FRAGMENT_DEPTH                  UINT64_C(0x0000000000000040) //!< Fragment depth is available in fragment shader.
+#define BGFX_CAPS_FRAGMENT_ORDERING               UINT64_C(0x0000000000000080) //!< Fragment ordering is available in fragment shader.
+#define BGFX_CAPS_GRAPHICS_DEBUGGER               UINT64_C(0x0000000000000100) //!< Graphics debugger is present.
+#define BGFX_CAPS_HDR10                           UINT64_C(0x0000000000000200) //!< HDR10 rendering is supported.
+#define BGFX_CAPS_HIDPI                           UINT64_C(0x0000000000000400) //!< HiDPI rendering is supported.
+#define BGFX_CAPS_IMAGE_RW                        UINT64_C(0x0000000000000800) //!< Image Read/Write is supported.
+#define BGFX_CAPS_INDEX32                         UINT64_C(0x0000000000001000) //!< 32-bit indices are supported.
+#define BGFX_CAPS_INSTANCING                      UINT64_C(0x0000000000002000) //!< Instancing is supported.
+#define BGFX_CAPS_OCCLUSION_QUERY                 UINT64_C(0x0000000000004000) //!< Occlusion query is supported.
+#define BGFX_CAPS_PRIMITIVE_ID                    UINT64_C(0x0000000000008000) //!< PrimitiveID is available in fragment shader.
+#define BGFX_CAPS_RENDERER_MULTITHREADED          UINT64_C(0x0000000000010000) //!< Renderer is on separate thread.
+#define BGFX_CAPS_SWAP_CHAIN                      UINT64_C(0x0000000000020000) //!< Multiple windows are supported.
 #define BGFX_CAPS_TEXTURE_BLIT                    UINT64_C(0x0000000000040000) //!< Texture blit is supported.
-#define BGFX_CAPS_TRANSPARENT_BACKBUFFER          UINT64_C(0x0000000000080000) //!< Transparent back buffer supported.
+#define BGFX_CAPS_TEXTURE_COMPARE_LEQUAL          UINT64_C(0x0000000000080000) //!< Texture compare less equal mode is supported.
 #define BGFX_CAPS_TEXTURE_COMPARE_RESERVED        UINT64_C(0x0000000000100000)
-#define BGFX_CAPS_TEXTURE_COMPARE_LEQUAL          UINT64_C(0x0000000000200000) //!< Texture compare less equal mode is supported.
-#define BGFX_CAPS_TEXTURE_CUBE_ARRAY              UINT64_C(0x0000000000400000) //!< Cubemap texture array is supported.
-#define BGFX_CAPS_TEXTURE_DIRECT_ACCESS           UINT64_C(0x0000000000800000) //!< CPU direct access to GPU texture memory.
-#define BGFX_CAPS_TEXTURE_READ_BACK               UINT64_C(0x0000000001000000) //!< Read-back texture is supported.
-#define BGFX_CAPS_VERTEX_ATTRIB_HALF              UINT64_C(0x0000000002000000) //!< Vertex attribute half-float is supported.
-#define BGFX_CAPS_VERTEX_ATTRIB_UINT10            UINT64_C(0x0000000004000000) //!< Vertex attribute 10_10_10_2 is supported.
-#define BGFX_CAPS_VERTEX_ID                       UINT64_C(0x0000000008000000) //!< Rendering with VertexID only is supported.
-#define BGFX_CAPS_PRIMITIVE_ID                    UINT64_C(0x0000000010000000) //!< PrimitiveID is available in fragment shader.
-#define BGFX_CAPS_VIEWPORT_LAYER_ARRAY            UINT64_C(0x0000000020000000) //!< Viewport layer is available in vertex shader.
-#define BGFX_CAPS_DRAW_INDIRECT_COUNT             UINT64_C(0x0000000040000000) //!< Draw indirect with indirect count is supported.
+#define BGFX_CAPS_TEXTURE_CUBE_ARRAY              UINT64_C(0x0000000000200000) //!< Cubemap texture array is supported.
+#define BGFX_CAPS_TEXTURE_DIRECT_ACCESS           UINT64_C(0x0000000000400000) //!< CPU direct access to GPU texture memory.
+#define BGFX_CAPS_TEXTURE_EXTERNAL                UINT64_C(0x0000000000800000) //!< External texture is supported.
+#define BGFX_CAPS_TEXTURE_EXTERNAL_SHARED         UINT64_C(0x0000000001000000) //!< External shared texture is supported.
+#define BGFX_CAPS_TEXTURE_READ_BACK               UINT64_C(0x0000000002000000) //!< Read-back texture is supported.
+#define BGFX_CAPS_TEXTURE_2D_ARRAY                UINT64_C(0x0000000004000000) //!< 2D texture array is supported.
+#define BGFX_CAPS_TEXTURE_3D                      UINT64_C(0x0000000008000000) //!< 3D textures are supported.
+#define BGFX_CAPS_TRANSPARENT_BACKBUFFER          UINT64_C(0x0000000010000000) //!< Transparent back buffer supported.
+#define BGFX_CAPS_VARIABLE_RATE_SHADING           UINT64_C(0x0000000020000000) //!< Variable Rate Shading
+#define BGFX_CAPS_VERTEX_ATTRIB_HALF              UINT64_C(0x0000000040000000) //!< Vertex attribute half-float is supported.
+#define BGFX_CAPS_VERTEX_ATTRIB_UINT10            UINT64_C(0x0000000080000000) //!< Vertex attribute 10_10_10_2 is supported.
+#define BGFX_CAPS_VERTEX_ID                       UINT64_C(0x0000000100000000) //!< Rendering with VertexID only is supported.
+#define BGFX_CAPS_VIEWPORT_LAYER_ARRAY            UINT64_C(0x0000000200000000) //!< Viewport layer is available in vertex shader.
 /// All texture compare modes are supported.
 #define BGFX_CAPS_TEXTURE_COMPARE_ALL (0 \
 	| BGFX_CAPS_TEXTURE_COMPARE_RESERVED \
@@ -517,6 +521,7 @@
 #define BGFX_CAPS_FORMAT_TEXTURE_FRAMEBUFFER_MSAA UINT32_C(0x00002000) //!< Texture format can be used as MSAA frame buffer.
 #define BGFX_CAPS_FORMAT_TEXTURE_MSAA             UINT32_C(0x00004000) //!< Texture can be sampled as MSAA.
 #define BGFX_CAPS_FORMAT_TEXTURE_MIP_AUTOGEN      UINT32_C(0x00008000) //!< Texture format supports auto-generated mips.
+#define BGFX_CAPS_FORMAT_TEXTURE_BACKBUFFER       UINT32_C(0x00010000) //!< Texture format can be used as back buffer format.
 
 #define BGFX_RESOLVE_NONE                         UINT8_C(0x00) //!< No resolve flags.
 #define BGFX_RESOLVE_AUTO_GEN_MIPS                UINT8_C(0x01) //!< Auto-generate mip maps on resolve.
@@ -536,6 +541,10 @@
 #define BGFX_CUBE_MAP_NEGATIVE_Y                  UINT8_C(0x03) //!< Cubemap -y.
 #define BGFX_CUBE_MAP_POSITIVE_Z                  UINT8_C(0x04) //!< Cubemap +z.
 #define BGFX_CUBE_MAP_NEGATIVE_Z                  UINT8_C(0x05) //!< Cubemap -z.
+
+#define BGFX_FRAME_NONE                           UINT8_C(0x00) //!< No frame flags.
+#define BGFX_FRAME_DEBUG_CAPTURE                  UINT8_C(0x01) //!< Capture frame with graphics debugger.
+#define BGFX_FRAME_DISCARD                        UINT8_C(0x02) //!< Discard all draw calls.
 
 
 /// Blend function separate.

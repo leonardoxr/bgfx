@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2023 Branimir Karadzic. All rights reserved.
+ * Copyright 2011-2026 Branimir Karadzic. All rights reserved.
  * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
  */
 
@@ -117,7 +117,7 @@ namespace bgfx
 		{ 3, 0 }, // TEXLDL
 		{ 0, 0 }, // BREAKP
 	};
-	BX_STATIC_ASSERT(BX_COUNTOF(s_dx9bcOpcodeInfo) == Dx9bcOpcode::Count);
+	static_assert(BX_COUNTOF(s_dx9bcOpcodeInfo) == Dx9bcOpcode::Count);
 
 	static const char* s_dx9bcOpcode[] =
 	{
@@ -221,7 +221,7 @@ namespace bgfx
 		"texldl",
 		"breakp",
 	};
-	BX_STATIC_ASSERT(BX_COUNTOF(s_dx9bcOpcode) == Dx9bcOpcode::Count);
+	static_assert(BX_COUNTOF(s_dx9bcOpcode) == Dx9bcOpcode::Count);
 
 	const char* getName(Dx9bcOpcode::Enum _opcode)
 	{
@@ -253,7 +253,7 @@ namespace bgfx
 		"label",       // Label
 		"p",           // Predicate register
 	};
-	BX_STATIC_ASSERT(BX_COUNTOF(s_dx9bcOperandType) == Dx9bcOperandType::Count);
+	static_assert(BX_COUNTOF(s_dx9bcOperandType) == Dx9bcOperandType::Count);
 
 	static const char* s_dx9bcDeclUsage[] =
 	{
@@ -272,7 +272,7 @@ namespace bgfx
 		"depth",
 		"sample",
 	};
-	BX_STATIC_ASSERT(BX_COUNTOF(s_dx9bcDeclUsage) == Dx9bcDeclUsage::Count);
+	static_assert(BX_COUNTOF(s_dx9bcDeclUsage) == Dx9bcDeclUsage::Count);
 
 	int32_t read(bx::ReaderI* _reader, Dx9bcSubOperand& _subOperand, bx::Error* _err)
 	{
@@ -443,12 +443,12 @@ namespace bgfx
 
 		switch (_instruction.numOperands)
 		{
-		case 6: size += read(_reader, _instruction.operand[currOp++], _err); BX_FALLTHROUGH;
-		case 5: size += read(_reader, _instruction.operand[currOp++], _err); BX_FALLTHROUGH;
-		case 4: size += read(_reader, _instruction.operand[currOp++], _err); BX_FALLTHROUGH;
-		case 3: size += read(_reader, _instruction.operand[currOp++], _err); BX_FALLTHROUGH;
-		case 2: size += read(_reader, _instruction.operand[currOp++], _err); BX_FALLTHROUGH;
-		case 1: size += read(_reader, _instruction.operand[currOp++], _err); BX_FALLTHROUGH;
+		case 6: size += read(_reader, _instruction.operand[currOp++], _err); [[fallthrough]];
+		case 5: size += read(_reader, _instruction.operand[currOp++], _err); [[fallthrough]];
+		case 4: size += read(_reader, _instruction.operand[currOp++], _err); [[fallthrough]];
+		case 3: size += read(_reader, _instruction.operand[currOp++], _err); [[fallthrough]];
+		case 2: size += read(_reader, _instruction.operand[currOp++], _err); [[fallthrough]];
+		case 1: size += read(_reader, _instruction.operand[currOp++], _err); [[fallthrough]];
 		case 0:
 			if (!valuesBeforeOpcode
 			&&  0 < info.numValues)
@@ -482,12 +482,12 @@ namespace bgfx
 		uint32_t currOp = 0;
 		switch (_instruction.numOperands)
 		{
-		case 6: size += write(_writer, _instruction.operand[currOp++], _err); BX_FALLTHROUGH;
-		case 5: size += write(_writer, _instruction.operand[currOp++], _err); BX_FALLTHROUGH;
-		case 4: size += write(_writer, _instruction.operand[currOp++], _err); BX_FALLTHROUGH;
-		case 3: size += write(_writer, _instruction.operand[currOp++], _err); BX_FALLTHROUGH;
-		case 2: size += write(_writer, _instruction.operand[currOp++], _err); BX_FALLTHROUGH;
-		case 1: size += write(_writer, _instruction.operand[currOp++], _err); BX_FALLTHROUGH;
+		case 6: size += write(_writer, _instruction.operand[currOp++], _err); [[fallthrough]];
+		case 5: size += write(_writer, _instruction.operand[currOp++], _err); [[fallthrough]];
+		case 4: size += write(_writer, _instruction.operand[currOp++], _err); [[fallthrough]];
+		case 3: size += write(_writer, _instruction.operand[currOp++], _err); [[fallthrough]];
+		case 2: size += write(_writer, _instruction.operand[currOp++], _err); [[fallthrough]];
+		case 1: size += write(_writer, _instruction.operand[currOp++], _err); [[fallthrough]];
 		case 0:
 			break;
 		}

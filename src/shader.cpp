@@ -1,11 +1,11 @@
 /*
- * Copyright 2011-2023 Branimir Karadzic. All rights reserved.
+ * Copyright 2011-2026 Branimir Karadzic. All rights reserved.
  * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
  */
 
 #include "bgfx_p.h"
-#include "shader_dxbc.h"
 #include "shader_dx9bc.h"
+#include "shader_dxbc.h"
 #include "shader_spirv.h"
 
 namespace bgfx
@@ -24,7 +24,7 @@ namespace bgfx
 		{ DescriptorType::StorageBuffer, 0x0007 },
 		{ DescriptorType::StorageImage,  0x0003 },
 	};
-	BX_STATIC_ASSERT(BX_COUNTOF(s_descriptorTypeToId) == DescriptorType::Count);
+	static_assert(BX_COUNTOF(s_descriptorTypeToId) == DescriptorType::Count);
 
 	DescriptorType::Enum idToDescriptorType(uint16_t _id)
 	{
@@ -59,7 +59,7 @@ namespace bgfx
 		{ TextureComponentType::Depth,             0x03 },
 		{ TextureComponentType::UnfilterableFloat, 0x04 },
 	};
-	BX_STATIC_ASSERT(BX_COUNTOF(s_textureComponentTypeToId) == TextureComponentType::Count);
+	static_assert(BX_COUNTOF(s_textureComponentTypeToId) == TextureComponentType::Count);
 
 	TextureComponentType::Enum idToTextureComponentType(uint8_t _id)
 	{
@@ -95,7 +95,7 @@ namespace bgfx
 		{ TextureDimension::DimensionCubeArray, 0x05 },
 		{ TextureDimension::Dimension3D,        0x06 },
 	};
-	BX_STATIC_ASSERT(BX_COUNTOF(s_textureDimensionToId) == TextureDimension::Count);
+	static_assert(BX_COUNTOF(s_textureDimensionToId) == TextureDimension::Count);
 
 	TextureDimension::Enum idToTextureDimension(uint8_t _id)
 	{

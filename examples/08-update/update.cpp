@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2023 Branimir Karadzic. All rights reserved.
+ * Copyright 2011-2026 Branimir Karadzic. All rights reserved.
  * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
  */
 
@@ -77,7 +77,7 @@ static PosTexcoordVertex s_cubeVertices[] =
 	{-1.0f, -1.0f,  1.0f, -2.0f, -2.0f,  2.0f },
 	{ 1.0f, -1.0f,  1.0f,  2.0f, -2.0f,  2.0f },
 };
-BX_STATIC_ASSERT(BX_COUNTOF(s_cubeVertices) == 28);
+static_assert(BX_COUNTOF(s_cubeVertices) == 28);
 
 static const uint16_t s_cubeIndices[] =
 {
@@ -99,7 +99,7 @@ static const uint16_t s_cubeIndices[] =
 	20, 22, 21, // 10
 	21, 22, 23,
 };
-BX_STATIC_ASSERT(BX_COUNTOF(s_cubeIndices) == 36);
+static_assert(BX_COUNTOF(s_cubeIndices) == 36);
 
 bx::Vec3 s_faceColors[] =
 {
@@ -247,7 +247,7 @@ public:
 		init.vendorId = args.m_pciId;
 		init.platformData.nwh  = entry::getNativeWindowHandle(entry::kDefaultWindowHandle);
 		init.platformData.ndt  = entry::getNativeDisplayHandle();
-		init.platformData.type = entry::getNativeWindowHandleType(entry::kDefaultWindowHandle);
+		init.platformData.type = entry::getNativeWindowHandleType();
 		init.resolution.width  = m_width;
 		init.resolution.height = m_height;
 		init.resolution.reset  = m_reset;
@@ -295,7 +295,7 @@ public:
 		m_textures[22] = loadTextureWithUpdate("textures/texture_compression_atci.dds");
 		m_textures[23] = loadTextureWithUpdate("textures/texture_compression_atce.dds");
 
-		BX_STATIC_ASSERT(24 == BX_COUNTOF(m_textures));
+		static_assert(24 == BX_COUNTOF(m_textures));
 
 		const bgfx::Caps* caps = bgfx::getCaps();
 		m_texture3DSupported = !!(caps->supported & BGFX_CAPS_TEXTURE_3D);
@@ -367,7 +367,7 @@ public:
 		s_texColor = bgfx::createUniform("s_texColor", bgfx::UniformType::Sampler);
 
 		// Create time uniform.
-		u_time = bgfx::createUniform("u_time", bgfx::UniformType::Vec4);
+		u_time = bgfx::createUniform("u_time", bgfx::UniformFreq::Frame, bgfx::UniformType::Vec4);
 
 		for(uint32_t ii = 0; ii<BX_COUNTOF( m_textureCube ); ++ii)
 		{
@@ -443,10 +443,9 @@ public:
 		m_hit  = 0;
 		m_miss = 0;
 
-		m_updateTime = 0;
-		m_timeOffset = bx::getHPCounter();
-
 		imguiCreate();
+
+		m_frameTime.reset();
 	}
 
 	virtual int shutdown() override
@@ -545,6 +544,10 @@ public:
 	{
 		if (!entry::processEvents(m_width, m_height, m_debug, m_reset, &m_mouseState) )
 		{
+			m_frameTime.frame();
+			const float time = bx::toSeconds<float>(m_frameTime.getDurationTime() );
+			bgfx::setFrameUniform(u_time, &time);
+
 			imguiBeginFrame(m_mouseState.m_mx
 				,  m_mouseState.m_my
 				, (m_mouseState.m_buttons[entry::MouseButton::Left  ] ? IMGUI_MBUT_LEFT   : 0)
@@ -590,11 +593,7 @@ public:
 			// if no other draw calls are submitted to view 0.
 			bgfx::touch(0);
 
-			int64_t now = bx::getHPCounter();
-			float time = (float)( (now - m_timeOffset)/double(bx::getHPFrequency() ) );
-			bgfx::setUniform(u_time, &time);
-
-			if (now > m_updateTime)
+			if (bx::getNow() > m_updateTime)
 			{
 				PackCube face;
 
@@ -754,7 +753,7 @@ public:
 					"compute",
 					"frameBuffer",
 			};
-			BX_STATIC_ASSERT(BX_COUNTOF(descTextureCube) == BX_COUNTOF(m_textureCube));
+			static_assert(BX_COUNTOF(descTextureCube) == BX_COUNTOF(m_textureCube));
 
 			for (uint32_t ii = 0; ii < BX_COUNTOF(m_textureCube); ++ii)
 			{
@@ -847,7 +846,7 @@ public:
 				"update\natci",
 				"update\natce",
 			};
-			BX_STATIC_ASSERT(BX_COUNTOF(descTextures)  == BX_COUNTOF(m_textures));
+			static_assert(BX_COUNTOF(descTextures)  == BX_COUNTOF(m_textures));
 
 			for (uint32_t ii = 0; ii < BX_COUNTOF(m_textures); ++ii)
 			{
@@ -878,7 +877,7 @@ public:
 					"Tex3D R16F",
 					"Tex3D R32F",
 			};
-			BX_STATIC_ASSERT(BX_COUNTOF(descTextures3d) == BX_COUNTOF(m_textures3d));
+			static_assert(BX_COUNTOF(descTextures3d) == BX_COUNTOF(m_textures3d));
 
 			for (uint32_t ii = 0; ii < m_numTextures3d; ++ii)
 			{
@@ -978,8 +977,8 @@ public:
 
 	std::list<PackCube> m_quads;
 	RectPackCubeT<256> m_cube;
-	int64_t m_updateTime;
-	int64_t m_timeOffset;
+	bx::Ticks m_updateTime = bx::InitZero;
+
 	bx::RngMwc m_rng;
 
 	uint32_t m_hit;
@@ -1007,6 +1006,7 @@ public:
 	bgfx::UniformHandle s_texColor;
 	bgfx::UniformHandle s_texCube;
 
+	FrameTime m_frameTime;
 };
 
 } // namespace

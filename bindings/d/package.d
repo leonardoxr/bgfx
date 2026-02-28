@@ -5,19 +5,17 @@
 +/
 module bgfx;
 
+import bindbc.common.types: c_int64, c_uint64, va_list;
 import bindbc.bgfx.config;
+static import bgfx.impl;
 
-import bindbc.common.types: va_list;
-static import bgfx.fakeenum;
-
-enum uint apiVersion = 122;
+enum uint apiVersion = 140;
 
 alias ViewID = ushort;
-deprecated("Please use `ViewID` instead.") alias ViewId = ushort;
 
 enum invalidHandle(T) = T(ushort.max);
 
-alias ReleaseFn = void function(void* ptr, void* userData);
+alias ReleaseFn = extern(C++) void function(void* ptr, void* userData) nothrow;
 
 ///Memory release callback.
 
@@ -106,7 +104,7 @@ enum StateAlphaRef: StateAlphaRef_{
 	shift  = 40, ///Alpha reference bit shift
 	mask   = 0x0000_FF00_0000_0000, ///Alpha reference bit mask
 }
-StateAlphaRef_ toStateAlphaRef(ulong v){ return (v << StateAlphaRef.shift) & StateAlphaRef.mask; }
+StateAlphaRef_ toStateAlphaRef(ulong v) nothrow @nogc pure @safe{ return (v << StateAlphaRef.shift) & StateAlphaRef.mask; }
 
 alias StatePT_ = ulong;
 enum StatePT: StatePT_{
@@ -124,7 +122,7 @@ enum StatePointSize: StatePointSize_{
 	shift  = 52, ///Point size bit shift
 	mask   = 0x00F0_0000_0000_0000, ///Point size bit mask
 }
-StatePointSize_ toStatePointSize(ulong v){ return (v << StatePointSize.shift) & StatePointSize.mask; }
+StatePointSize_ toStatePointSize(ulong v) nothrow @nogc pure @safe{ return (v << StatePointSize.shift) & StatePointSize.mask; }
 
 /**
 Enable MSAA write when writing into MSAA frame buffer.
@@ -161,15 +159,15 @@ enum StencilFuncRef: StencilFuncRef_{
 	shift  = 0,
 	mask   = 0x0000_00FF,
 }
-StencilFuncRef_ toStencilFuncRef(uint v){ return (v << StencilFuncRef.shift) & StencilFuncRef.mask; }
+StencilFuncRef_ toStencilFuncRef(uint v) nothrow @nogc pure @safe{ return (v << StencilFuncRef.shift) & StencilFuncRef.mask; }
 
 ///Set stencil rmask value.
-alias StencilFuncRmask_ = uint;
-enum StencilFuncRmask: StencilFuncRmask_{
+alias StencilFuncRMask_ = uint;
+enum StencilFuncRMask: StencilFuncRMask_{
 	shift  = 8,
 	mask   = 0x0000_FF00,
 }
-StencilFuncRmask_ toStencilFuncRmask(uint v){ return (v << StencilFuncRmask.shift) & StencilFuncRmask.mask; }
+StencilFuncRMask_ toStencilFuncRMask(uint v) nothrow @nogc pure @safe{ return (v << StencilFuncRMask.shift) & StencilFuncRMask.mask; }
 
 alias Stencil_ = uint;
 enum Stencil: Stencil_{
@@ -296,15 +294,15 @@ enum Debug: Debug_{
 
 alias BufferComputeFormat_ = ushort;
 enum BufferComputeFormat: BufferComputeFormat_{
-	_8x1   = 0x0001, ///1 8-bit value
-	_8x2   = 0x0002, ///2 8-bit values
-	_8x4   = 0x0003, ///4 8-bit values
-	_16x1  = 0x0004, ///1 16-bit value
-	_16x2  = 0x0005, ///2 16-bit values
-	_16x4  = 0x0006, ///4 16-bit values
-	_32x1  = 0x0007, ///1 32-bit value
-	_32x2  = 0x0008, ///2 32-bit values
-	_32x4  = 0x0009, ///4 32-bit values
+	_8x1   = 0x0001, ///1 x 8-bit value
+	_8x2   = 0x0002, ///2 x 8-bit values
+	_8x4   = 0x0003, ///4 x 8-bit values
+	_16x1  = 0x0004, ///1 x 16-bit value
+	_16x2  = 0x0005, ///2 x 16-bit values
+	_16x4  = 0x0006, ///4 x 16-bit values
+	_32x1  = 0x0007, ///1 x 32-bit value
+	_32x2  = 0x0008, ///2 x 32-bit values
+	_32x4  = 0x0009, ///4 x 32-bit values
 	shift  = 0,
 	mask   = 0x000F,
 }
@@ -331,13 +329,14 @@ enum Buffer: Buffer_{
 
 alias Texture_ = ulong;
 enum Texture: Texture_{
-	none          = 0x0000_0000_0000_0000,
-	msaaSample    = 0x0000_0008_0000_0000, ///Texture will be used for MSAA sampling.
-	rt            = 0x0000_0010_0000_0000, ///Render target no MSAA.
-	computeWrite  = 0x0000_1000_0000_0000, ///Texture will be used for compute write.
-	srgb          = 0x0000_2000_0000_0000, ///Sample texture as sRGB.
-	blitDst       = 0x0000_4000_0000_0000, ///Texture will be used as blit destination.
-	readBack      = 0x0000_8000_0000_0000, ///Texture will be used for read back from GPU.
+	none            = 0x0000_0000_0000_0000,
+	msaaSample      = 0x0000_0008_0000_0000, ///Texture will be used for MSAA sampling.
+	rt              = 0x0000_0010_0000_0000, ///Render target no MSAA.
+	computeWrite    = 0x0000_1000_0000_0000, ///Texture will be used for compute write.
+	srgb            = 0x0000_2000_0000_0000, ///Sample texture as sRGB.
+	blitDst         = 0x0000_4000_0000_0000, ///Texture will be used as blit destination.
+	readBack        = 0x0000_8000_0000_0000, ///Texture will be used for read back from GPU.
+	externalShared  = 0x0001_0000_0000_0000, ///Texture is shared with other device or other process.
 }
 
 alias TextureRTMSAA_ = ulong;
@@ -428,7 +427,7 @@ enum SamplerBorderColor: SamplerBorderColor_{
 	mask   = 0x0F00_0000,
 }
 alias SamplerBorderColour = SamplerBorderColor;
-SamplerBorderColor_ toSamplerBorderColor(uint v){ return (v << SamplerBorderColor.shift) & SamplerBorderColor.mask; }
+SamplerBorderColor_ toSamplerBorderColor(uint v) nothrow @nogc pure @safe{ return (v << SamplerBorderColor.shift) & SamplerBorderColor.mask; }
 alias toSamplerBorderColour = toSamplerBorderColor;
 
 alias SamplerReserved_ = uint;
@@ -498,33 +497,36 @@ enum CapFlags: CapFlags_{
 	compute                 = 0x0000_0000_0000_0004, ///Compute shaders are supported.
 	conservativeRaster      = 0x0000_0000_0000_0008, ///Conservative rasterization is supported.
 	drawIndirect            = 0x0000_0000_0000_0010, ///Draw indirect is supported.
-	fragmentDepth           = 0x0000_0000_0000_0020, ///Fragment depth is available in fragment shader.
-	fragmentOrdering        = 0x0000_0000_0000_0040, ///Fragment ordering is available in fragment shader.
-	graphicsDebugger        = 0x0000_0000_0000_0080, ///Graphics debugger is present.
-	hdr10                   = 0x0000_0000_0000_0100, ///HDR10 rendering is supported.
-	hiDPI                   = 0x0000_0000_0000_0200, ///HiDPI rendering is supported.
-	imageRW                 = 0x0000_0000_0000_0400, ///Image Read/Write is supported.
-	index32                 = 0x0000_0000_0000_0800, ///32-bit indices are supported.
-	instancing              = 0x0000_0000_0000_1000, ///Instancing is supported.
-	occlusionQuery          = 0x0000_0000_0000_2000, ///Occlusion query is supported.
-	rendererMultithreaded   = 0x0000_0000_0000_4000, ///Renderer is on separate thread.
-	swapChain               = 0x0000_0000_0000_8000, ///Multiple windows are supported.
-	texture2DArray          = 0x0000_0000_0001_0000, ///2D texture array is supported.
-	texture3D               = 0x0000_0000_0002_0000, ///3D textures are supported.
+	drawIndirectCount       = 0x0000_0000_0000_0020, ///Draw indirect with indirect count is supported.
+	fragmentDepth           = 0x0000_0000_0000_0040, ///Fragment depth is available in fragment shader.
+	fragmentOrdering        = 0x0000_0000_0000_0080, ///Fragment ordering is available in fragment shader.
+	graphicsDebugger        = 0x0000_0000_0000_0100, ///Graphics debugger is present.
+	hdr10                   = 0x0000_0000_0000_0200, ///HDR10 rendering is supported.
+	hiDPI                   = 0x0000_0000_0000_0400, ///HiDPI rendering is supported.
+	imageRW                 = 0x0000_0000_0000_0800, ///Image Read/Write is supported.
+	index32                 = 0x0000_0000_0000_1000, ///32-bit indices are supported.
+	instancing              = 0x0000_0000_0000_2000, ///Instancing is supported.
+	occlusionQuery          = 0x0000_0000_0000_4000, ///Occlusion query is supported.
+	primitiveID             = 0x0000_0000_0000_8000, ///PrimitiveID is available in fragment shader.
+	rendererMultithreaded   = 0x0000_0000_0001_0000, ///Renderer is on separate thread.
+	swapChain               = 0x0000_0000_0002_0000, ///Multiple windows are supported.
 	textureBlit             = 0x0000_0000_0004_0000, ///Texture blit is supported.
-	transparentBackbuffer   = 0x0000_0000_0008_0000, ///Transparent back buffer supported.
+	textureCompareLEqual    = 0x0000_0000_0008_0000, ///Texture compare less equal mode is supported.
 	textureCompareReserved  = 0x0000_0000_0010_0000,
-	textureCompareLEqual    = 0x0000_0000_0020_0000, ///Texture compare less equal mode is supported.
-	textureCubeArray        = 0x0000_0000_0040_0000, ///Cubemap texture array is supported.
-	textureDirectAccess     = 0x0000_0000_0080_0000, ///CPU direct access to GPU texture memory.
-	textureReadBack         = 0x0000_0000_0100_0000, ///Read-back texture is supported.
-	vertexAttribHalf        = 0x0000_0000_0200_0000, ///Vertex attribute half-float is supported.
-	vertexAttribUint10      = 0x0000_0000_0400_0000, ///Vertex attribute 10_10_10_2 is supported.
-	vertexID                = 0x0000_0000_0800_0000, ///Rendering with VertexID only is supported.
-	primitiveID             = 0x0000_0000_1000_0000, ///PrimitiveID is available in fragment shader.
-	viewportLayerArray      = 0x0000_0000_2000_0000, ///Viewport layer is available in vertex shader.
-	drawIndirectCount       = 0x0000_0000_4000_0000, ///Draw indirect with indirect count is supported.
-	textureCompareAll       = 0x0000_0000_0030_0000, ///All texture compare modes are supported.
+	textureCubeArray        = 0x0000_0000_0020_0000, ///Cubemap texture array is supported.
+	textureDirectAccess     = 0x0000_0000_0040_0000, ///CPU direct access to GPU texture memory.
+	textureExternal         = 0x0000_0000_0080_0000, ///External texture is supported.
+	textureExternalShared   = 0x0000_0000_0100_0000, ///External shared texture is supported.
+	textureReadBack         = 0x0000_0000_0200_0000, ///Read-back texture is supported.
+	texture2DArray          = 0x0000_0000_0400_0000, ///2D texture array is supported.
+	texture3D               = 0x0000_0000_0800_0000, ///3D textures are supported.
+	transparentBackbuffer   = 0x0000_0000_1000_0000, ///Transparent back buffer supported.
+	variableRateShading     = 0x0000_0000_2000_0000, ///Variable Rate Shading
+	vertexAttribHalf        = 0x0000_0000_4000_0000, ///Vertex attribute half-float is supported.
+	vertexAttribUint10      = 0x0000_0000_8000_0000, ///Vertex attribute 10_10_10_2 is supported.
+	vertexID                = 0x0000_0001_0000_0000, ///Rendering with VertexID only is supported.
+	viewportLayerArray      = 0x0000_0002_0000_0000, ///Viewport layer is available in vertex shader.
+	textureCompareAll       = 0x0000_0000_0018_0000, ///All texture compare modes are supported.
 }
 
 alias CapsFormat_ = uint;
@@ -546,6 +548,7 @@ enum CapsFormat: CapsFormat_{
 	textureFramebufferMSAA  = 0x0000_2000, ///Texture format can be used as MSAA frame buffer.
 	textureMSAA             = 0x0000_4000, ///Texture can be sampled as MSAA.
 	textureMIPAutogen       = 0x0000_8000, ///Texture format supports auto-generated mips.
+	textureBackbuffer       = 0x0001_0000, ///Texture format can be used as back buffer format.
 }
 
 alias Resolve_ = ubyte;
@@ -577,77 +580,84 @@ enum CubeMap: CubeMap_{
 	negativeZ  = 0x05, ///Cubemap -z.
 }
 
+alias Frame_ = ubyte;
+enum Frame: Frame_{
+	none          = 0x00, ///No frame flags.
+	debugCapture  = 0x01, ///Capture frame with graphics debugger.
+	discard       = 0x02, ///Discard all draw calls.
+}
+
 ///Fatal error enum.
-enum Fatal: bgfx.fakeenum.Fatal.Enum{
-	debugCheck = bgfx.fakeenum.Fatal.Enum.debugCheck,
-	invalidShader = bgfx.fakeenum.Fatal.Enum.invalidShader,
-	unableToInitialize = bgfx.fakeenum.Fatal.Enum.unableToInitialize,
-	unableToInitialise = bgfx.fakeenum.Fatal.Enum.unableToInitialize,
-	unableToCreateTexture = bgfx.fakeenum.Fatal.Enum.unableToCreateTexture,
-	deviceLost = bgfx.fakeenum.Fatal.Enum.deviceLost,
-	count = bgfx.fakeenum.Fatal.Enum.count,
+enum Fatal: bgfx.impl.Fatal.Enum{
+	debugCheck = bgfx.impl.Fatal.Enum.debugCheck,
+	invalidShader = bgfx.impl.Fatal.Enum.invalidShader,
+	unableToInitialize = bgfx.impl.Fatal.Enum.unableToInitialize,
+	unableToInitialise = bgfx.impl.Fatal.Enum.unableToInitialize,
+	unableToCreateTexture = bgfx.impl.Fatal.Enum.unableToCreateTexture,
+	deviceLost = bgfx.impl.Fatal.Enum.deviceLost,
+	count = bgfx.impl.Fatal.Enum.count,
 }
 
 ///Renderer backend type enum.
-enum RendererType: bgfx.fakeenum.RendererType.Enum{
-	noop = bgfx.fakeenum.RendererType.Enum.noop,
-	agc = bgfx.fakeenum.RendererType.Enum.agc,
-	direct3D9 = bgfx.fakeenum.RendererType.Enum.direct3D9,
-	direct3D11 = bgfx.fakeenum.RendererType.Enum.direct3D11,
-	direct3D12 = bgfx.fakeenum.RendererType.Enum.direct3D12,
-	gnm = bgfx.fakeenum.RendererType.Enum.gnm,
-	metal = bgfx.fakeenum.RendererType.Enum.metal,
-	nvn = bgfx.fakeenum.RendererType.Enum.nvn,
-	openGLES = bgfx.fakeenum.RendererType.Enum.openGLES,
-	openGL = bgfx.fakeenum.RendererType.Enum.openGL,
-	vulkan = bgfx.fakeenum.RendererType.Enum.vulkan,
-	webGPU = bgfx.fakeenum.RendererType.Enum.webGPU,
-	count = bgfx.fakeenum.RendererType.Enum.count,
+enum RendererType: bgfx.impl.RendererType.Enum{
+	noop = bgfx.impl.RendererType.Enum.noop,
+	agc = bgfx.impl.RendererType.Enum.agc,
+	direct3D9 = bgfx.impl.RendererType.Enum.direct3D9,
+	direct3D11 = bgfx.impl.RendererType.Enum.direct3D11,
+	direct3D12 = bgfx.impl.RendererType.Enum.direct3D12,
+	gnm = bgfx.impl.RendererType.Enum.gnm,
+	metal = bgfx.impl.RendererType.Enum.metal,
+	nvn = bgfx.impl.RendererType.Enum.nvn,
+	openGLES = bgfx.impl.RendererType.Enum.openGLES,
+	openGL = bgfx.impl.RendererType.Enum.openGL,
+	vulkan = bgfx.impl.RendererType.Enum.vulkan,
+	webGPU = bgfx.impl.RendererType.Enum.webGPU,
+	count = bgfx.impl.RendererType.Enum.count,
 }
 
 ///Access mode enum.
-enum Access: bgfx.fakeenum.Access.Enum{
-	read = bgfx.fakeenum.Access.Enum.read,
-	write = bgfx.fakeenum.Access.Enum.write,
-	readWrite = bgfx.fakeenum.Access.Enum.readWrite,
-	count = bgfx.fakeenum.Access.Enum.count,
+enum Access: bgfx.impl.Access.Enum{
+	read = bgfx.impl.Access.Enum.read,
+	write = bgfx.impl.Access.Enum.write,
+	readWrite = bgfx.impl.Access.Enum.readWrite,
+	count = bgfx.impl.Access.Enum.count,
 }
 
 ///Vertex attribute enum.
-enum Attrib: bgfx.fakeenum.Attrib.Enum{
-	position = bgfx.fakeenum.Attrib.Enum.position,
-	normal = bgfx.fakeenum.Attrib.Enum.normal,
-	tangent = bgfx.fakeenum.Attrib.Enum.tangent,
-	bitangent = bgfx.fakeenum.Attrib.Enum.bitangent,
-	color0 = bgfx.fakeenum.Attrib.Enum.color0,
-	colour0 = bgfx.fakeenum.Attrib.Enum.color0,
-	color1 = bgfx.fakeenum.Attrib.Enum.color1,
-	colour1 = bgfx.fakeenum.Attrib.Enum.color1,
-	color2 = bgfx.fakeenum.Attrib.Enum.color2,
-	colour2 = bgfx.fakeenum.Attrib.Enum.color2,
-	color3 = bgfx.fakeenum.Attrib.Enum.color3,
-	colour3 = bgfx.fakeenum.Attrib.Enum.color3,
-	indices = bgfx.fakeenum.Attrib.Enum.indices,
-	weight = bgfx.fakeenum.Attrib.Enum.weight,
-	texCoord0 = bgfx.fakeenum.Attrib.Enum.texCoord0,
-	texCoord1 = bgfx.fakeenum.Attrib.Enum.texCoord1,
-	texCoord2 = bgfx.fakeenum.Attrib.Enum.texCoord2,
-	texCoord3 = bgfx.fakeenum.Attrib.Enum.texCoord3,
-	texCoord4 = bgfx.fakeenum.Attrib.Enum.texCoord4,
-	texCoord5 = bgfx.fakeenum.Attrib.Enum.texCoord5,
-	texCoord6 = bgfx.fakeenum.Attrib.Enum.texCoord6,
-	texCoord7 = bgfx.fakeenum.Attrib.Enum.texCoord7,
-	count = bgfx.fakeenum.Attrib.Enum.count,
+enum Attrib: bgfx.impl.Attrib.Enum{
+	position = bgfx.impl.Attrib.Enum.position,
+	normal = bgfx.impl.Attrib.Enum.normal,
+	tangent = bgfx.impl.Attrib.Enum.tangent,
+	bitangent = bgfx.impl.Attrib.Enum.bitangent,
+	color0 = bgfx.impl.Attrib.Enum.color0,
+	colour0 = bgfx.impl.Attrib.Enum.color0,
+	color1 = bgfx.impl.Attrib.Enum.color1,
+	colour1 = bgfx.impl.Attrib.Enum.color1,
+	color2 = bgfx.impl.Attrib.Enum.color2,
+	colour2 = bgfx.impl.Attrib.Enum.color2,
+	color3 = bgfx.impl.Attrib.Enum.color3,
+	colour3 = bgfx.impl.Attrib.Enum.color3,
+	indices = bgfx.impl.Attrib.Enum.indices,
+	weight = bgfx.impl.Attrib.Enum.weight,
+	texCoord0 = bgfx.impl.Attrib.Enum.texCoord0,
+	texCoord1 = bgfx.impl.Attrib.Enum.texCoord1,
+	texCoord2 = bgfx.impl.Attrib.Enum.texCoord2,
+	texCoord3 = bgfx.impl.Attrib.Enum.texCoord3,
+	texCoord4 = bgfx.impl.Attrib.Enum.texCoord4,
+	texCoord5 = bgfx.impl.Attrib.Enum.texCoord5,
+	texCoord6 = bgfx.impl.Attrib.Enum.texCoord6,
+	texCoord7 = bgfx.impl.Attrib.Enum.texCoord7,
+	count = bgfx.impl.Attrib.Enum.count,
 }
 
 ///Vertex attribute type enum.
-enum AttribType: bgfx.fakeenum.AttribType.Enum{
-	uint8 = bgfx.fakeenum.AttribType.Enum.uint8,
-	uint10 = bgfx.fakeenum.AttribType.Enum.uint10,
-	int16 = bgfx.fakeenum.AttribType.Enum.int16,
-	half = bgfx.fakeenum.AttribType.Enum.half,
-	float_ = bgfx.fakeenum.AttribType.Enum.float_,
-	count = bgfx.fakeenum.AttribType.Enum.count,
+enum AttribType: bgfx.impl.AttribType.Enum{
+	uint8 = bgfx.impl.AttribType.Enum.uint8,
+	uint10 = bgfx.impl.AttribType.Enum.uint10,
+	int16 = bgfx.impl.AttribType.Enum.int16,
+	half = bgfx.impl.AttribType.Enum.half,
+	float_ = bgfx.impl.AttribType.Enum.float_,
+	count = bgfx.impl.AttribType.Enum.count,
 }
 
 /**
@@ -664,195 +674,219 @@ Notation:
       +-------- Components
 @attention Availability depends on Caps (see: formats).
 */
-enum TextureFormat: bgfx.fakeenum.TextureFormat.Enum{
-	bc1 = bgfx.fakeenum.TextureFormat.Enum.bc1,
-	bc2 = bgfx.fakeenum.TextureFormat.Enum.bc2,
-	bc3 = bgfx.fakeenum.TextureFormat.Enum.bc3,
-	bc4 = bgfx.fakeenum.TextureFormat.Enum.bc4,
-	bc5 = bgfx.fakeenum.TextureFormat.Enum.bc5,
-	bc6h = bgfx.fakeenum.TextureFormat.Enum.bc6h,
-	bc7 = bgfx.fakeenum.TextureFormat.Enum.bc7,
-	etc1 = bgfx.fakeenum.TextureFormat.Enum.etc1,
-	etc2 = bgfx.fakeenum.TextureFormat.Enum.etc2,
-	etc2a = bgfx.fakeenum.TextureFormat.Enum.etc2a,
-	etc2a1 = bgfx.fakeenum.TextureFormat.Enum.etc2a1,
-	ptc12 = bgfx.fakeenum.TextureFormat.Enum.ptc12,
-	ptc14 = bgfx.fakeenum.TextureFormat.Enum.ptc14,
-	ptc12a = bgfx.fakeenum.TextureFormat.Enum.ptc12a,
-	ptc14a = bgfx.fakeenum.TextureFormat.Enum.ptc14a,
-	ptc22 = bgfx.fakeenum.TextureFormat.Enum.ptc22,
-	ptc24 = bgfx.fakeenum.TextureFormat.Enum.ptc24,
-	atc = bgfx.fakeenum.TextureFormat.Enum.atc,
-	atce = bgfx.fakeenum.TextureFormat.Enum.atce,
-	atci = bgfx.fakeenum.TextureFormat.Enum.atci,
-	astc4x4 = bgfx.fakeenum.TextureFormat.Enum.astc4x4,
-	astc5x4 = bgfx.fakeenum.TextureFormat.Enum.astc5x4,
-	astc5x5 = bgfx.fakeenum.TextureFormat.Enum.astc5x5,
-	astc6x5 = bgfx.fakeenum.TextureFormat.Enum.astc6x5,
-	astc6x6 = bgfx.fakeenum.TextureFormat.Enum.astc6x6,
-	astc8x5 = bgfx.fakeenum.TextureFormat.Enum.astc8x5,
-	astc8x6 = bgfx.fakeenum.TextureFormat.Enum.astc8x6,
-	astc8x8 = bgfx.fakeenum.TextureFormat.Enum.astc8x8,
-	astc10x5 = bgfx.fakeenum.TextureFormat.Enum.astc10x5,
-	astc10x6 = bgfx.fakeenum.TextureFormat.Enum.astc10x6,
-	astc10x8 = bgfx.fakeenum.TextureFormat.Enum.astc10x8,
-	astc10x10 = bgfx.fakeenum.TextureFormat.Enum.astc10x10,
-	astc12x10 = bgfx.fakeenum.TextureFormat.Enum.astc12x10,
-	astc12x12 = bgfx.fakeenum.TextureFormat.Enum.astc12x12,
-	unknown = bgfx.fakeenum.TextureFormat.Enum.unknown,
-	r1 = bgfx.fakeenum.TextureFormat.Enum.r1,
-	a8 = bgfx.fakeenum.TextureFormat.Enum.a8,
-	r8 = bgfx.fakeenum.TextureFormat.Enum.r8,
-	r8i = bgfx.fakeenum.TextureFormat.Enum.r8i,
-	r8u = bgfx.fakeenum.TextureFormat.Enum.r8u,
-	r8s = bgfx.fakeenum.TextureFormat.Enum.r8s,
-	r16 = bgfx.fakeenum.TextureFormat.Enum.r16,
-	r16i = bgfx.fakeenum.TextureFormat.Enum.r16i,
-	r16u = bgfx.fakeenum.TextureFormat.Enum.r16u,
-	r16f = bgfx.fakeenum.TextureFormat.Enum.r16f,
-	r16s = bgfx.fakeenum.TextureFormat.Enum.r16s,
-	r32i = bgfx.fakeenum.TextureFormat.Enum.r32i,
-	r32u = bgfx.fakeenum.TextureFormat.Enum.r32u,
-	r32f = bgfx.fakeenum.TextureFormat.Enum.r32f,
-	rg8 = bgfx.fakeenum.TextureFormat.Enum.rg8,
-	rg8i = bgfx.fakeenum.TextureFormat.Enum.rg8i,
-	rg8u = bgfx.fakeenum.TextureFormat.Enum.rg8u,
-	rg8s = bgfx.fakeenum.TextureFormat.Enum.rg8s,
-	rg16 = bgfx.fakeenum.TextureFormat.Enum.rg16,
-	rg16i = bgfx.fakeenum.TextureFormat.Enum.rg16i,
-	rg16u = bgfx.fakeenum.TextureFormat.Enum.rg16u,
-	rg16f = bgfx.fakeenum.TextureFormat.Enum.rg16f,
-	rg16s = bgfx.fakeenum.TextureFormat.Enum.rg16s,
-	rg32i = bgfx.fakeenum.TextureFormat.Enum.rg32i,
-	rg32u = bgfx.fakeenum.TextureFormat.Enum.rg32u,
-	rg32f = bgfx.fakeenum.TextureFormat.Enum.rg32f,
-	rgb8 = bgfx.fakeenum.TextureFormat.Enum.rgb8,
-	rgb8i = bgfx.fakeenum.TextureFormat.Enum.rgb8i,
-	rgb8u = bgfx.fakeenum.TextureFormat.Enum.rgb8u,
-	rgb8s = bgfx.fakeenum.TextureFormat.Enum.rgb8s,
-	rgb9e5f = bgfx.fakeenum.TextureFormat.Enum.rgb9e5f,
-	bgra8 = bgfx.fakeenum.TextureFormat.Enum.bgra8,
-	rgba8 = bgfx.fakeenum.TextureFormat.Enum.rgba8,
-	rgba8i = bgfx.fakeenum.TextureFormat.Enum.rgba8i,
-	rgba8u = bgfx.fakeenum.TextureFormat.Enum.rgba8u,
-	rgba8s = bgfx.fakeenum.TextureFormat.Enum.rgba8s,
-	rgba16 = bgfx.fakeenum.TextureFormat.Enum.rgba16,
-	rgba16i = bgfx.fakeenum.TextureFormat.Enum.rgba16i,
-	rgba16u = bgfx.fakeenum.TextureFormat.Enum.rgba16u,
-	rgba16f = bgfx.fakeenum.TextureFormat.Enum.rgba16f,
-	rgba16s = bgfx.fakeenum.TextureFormat.Enum.rgba16s,
-	rgba32i = bgfx.fakeenum.TextureFormat.Enum.rgba32i,
-	rgba32u = bgfx.fakeenum.TextureFormat.Enum.rgba32u,
-	rgba32f = bgfx.fakeenum.TextureFormat.Enum.rgba32f,
-	b5g6r5 = bgfx.fakeenum.TextureFormat.Enum.b5g6r5,
-	r5g6b5 = bgfx.fakeenum.TextureFormat.Enum.r5g6b5,
-	bgra4 = bgfx.fakeenum.TextureFormat.Enum.bgra4,
-	rgba4 = bgfx.fakeenum.TextureFormat.Enum.rgba4,
-	bgr5a1 = bgfx.fakeenum.TextureFormat.Enum.bgr5a1,
-	rgb5a1 = bgfx.fakeenum.TextureFormat.Enum.rgb5a1,
-	rgb10a2 = bgfx.fakeenum.TextureFormat.Enum.rgb10a2,
-	rg11b10f = bgfx.fakeenum.TextureFormat.Enum.rg11b10f,
-	unknownDepth = bgfx.fakeenum.TextureFormat.Enum.unknownDepth,
-	d16 = bgfx.fakeenum.TextureFormat.Enum.d16,
-	d24 = bgfx.fakeenum.TextureFormat.Enum.d24,
-	d24s8 = bgfx.fakeenum.TextureFormat.Enum.d24s8,
-	d32 = bgfx.fakeenum.TextureFormat.Enum.d32,
-	d16f = bgfx.fakeenum.TextureFormat.Enum.d16f,
-	d24f = bgfx.fakeenum.TextureFormat.Enum.d24f,
-	d32f = bgfx.fakeenum.TextureFormat.Enum.d32f,
-	d0s8 = bgfx.fakeenum.TextureFormat.Enum.d0s8,
-	count = bgfx.fakeenum.TextureFormat.Enum.count,
+enum TextureFormat: bgfx.impl.TextureFormat.Enum{
+	bc1 = bgfx.impl.TextureFormat.Enum.bc1,
+	bc2 = bgfx.impl.TextureFormat.Enum.bc2,
+	bc3 = bgfx.impl.TextureFormat.Enum.bc3,
+	bc4 = bgfx.impl.TextureFormat.Enum.bc4,
+	bc5 = bgfx.impl.TextureFormat.Enum.bc5,
+	bc6h = bgfx.impl.TextureFormat.Enum.bc6h,
+	bc7 = bgfx.impl.TextureFormat.Enum.bc7,
+	etc1 = bgfx.impl.TextureFormat.Enum.etc1,
+	etc2 = bgfx.impl.TextureFormat.Enum.etc2,
+	etc2a = bgfx.impl.TextureFormat.Enum.etc2a,
+	etc2a1 = bgfx.impl.TextureFormat.Enum.etc2a1,
+	eacr11 = bgfx.impl.TextureFormat.Enum.eacr11,
+	eacr11s = bgfx.impl.TextureFormat.Enum.eacr11s,
+	eacrg11 = bgfx.impl.TextureFormat.Enum.eacrg11,
+	eacrg11s = bgfx.impl.TextureFormat.Enum.eacrg11s,
+	ptc12 = bgfx.impl.TextureFormat.Enum.ptc12,
+	ptc14 = bgfx.impl.TextureFormat.Enum.ptc14,
+	ptc12a = bgfx.impl.TextureFormat.Enum.ptc12a,
+	ptc14a = bgfx.impl.TextureFormat.Enum.ptc14a,
+	ptc22 = bgfx.impl.TextureFormat.Enum.ptc22,
+	ptc24 = bgfx.impl.TextureFormat.Enum.ptc24,
+	atc = bgfx.impl.TextureFormat.Enum.atc,
+	atce = bgfx.impl.TextureFormat.Enum.atce,
+	atci = bgfx.impl.TextureFormat.Enum.atci,
+	astc4x4 = bgfx.impl.TextureFormat.Enum.astc4x4,
+	astc5x4 = bgfx.impl.TextureFormat.Enum.astc5x4,
+	astc5x5 = bgfx.impl.TextureFormat.Enum.astc5x5,
+	astc6x5 = bgfx.impl.TextureFormat.Enum.astc6x5,
+	astc6x6 = bgfx.impl.TextureFormat.Enum.astc6x6,
+	astc8x5 = bgfx.impl.TextureFormat.Enum.astc8x5,
+	astc8x6 = bgfx.impl.TextureFormat.Enum.astc8x6,
+	astc8x8 = bgfx.impl.TextureFormat.Enum.astc8x8,
+	astc10x5 = bgfx.impl.TextureFormat.Enum.astc10x5,
+	astc10x6 = bgfx.impl.TextureFormat.Enum.astc10x6,
+	astc10x8 = bgfx.impl.TextureFormat.Enum.astc10x8,
+	astc10x10 = bgfx.impl.TextureFormat.Enum.astc10x10,
+	astc12x10 = bgfx.impl.TextureFormat.Enum.astc12x10,
+	astc12x12 = bgfx.impl.TextureFormat.Enum.astc12x12,
+	unknown = bgfx.impl.TextureFormat.Enum.unknown,
+	r1 = bgfx.impl.TextureFormat.Enum.r1,
+	a8 = bgfx.impl.TextureFormat.Enum.a8,
+	r8 = bgfx.impl.TextureFormat.Enum.r8,
+	r8i = bgfx.impl.TextureFormat.Enum.r8i,
+	r8u = bgfx.impl.TextureFormat.Enum.r8u,
+	r8s = bgfx.impl.TextureFormat.Enum.r8s,
+	r16 = bgfx.impl.TextureFormat.Enum.r16,
+	r16i = bgfx.impl.TextureFormat.Enum.r16i,
+	r16u = bgfx.impl.TextureFormat.Enum.r16u,
+	r16f = bgfx.impl.TextureFormat.Enum.r16f,
+	r16s = bgfx.impl.TextureFormat.Enum.r16s,
+	r32i = bgfx.impl.TextureFormat.Enum.r32i,
+	r32u = bgfx.impl.TextureFormat.Enum.r32u,
+	r32f = bgfx.impl.TextureFormat.Enum.r32f,
+	rg8 = bgfx.impl.TextureFormat.Enum.rg8,
+	rg8i = bgfx.impl.TextureFormat.Enum.rg8i,
+	rg8u = bgfx.impl.TextureFormat.Enum.rg8u,
+	rg8s = bgfx.impl.TextureFormat.Enum.rg8s,
+	rg16 = bgfx.impl.TextureFormat.Enum.rg16,
+	rg16i = bgfx.impl.TextureFormat.Enum.rg16i,
+	rg16u = bgfx.impl.TextureFormat.Enum.rg16u,
+	rg16f = bgfx.impl.TextureFormat.Enum.rg16f,
+	rg16s = bgfx.impl.TextureFormat.Enum.rg16s,
+	rg32i = bgfx.impl.TextureFormat.Enum.rg32i,
+	rg32u = bgfx.impl.TextureFormat.Enum.rg32u,
+	rg32f = bgfx.impl.TextureFormat.Enum.rg32f,
+	rgb8 = bgfx.impl.TextureFormat.Enum.rgb8,
+	rgb8i = bgfx.impl.TextureFormat.Enum.rgb8i,
+	rgb8u = bgfx.impl.TextureFormat.Enum.rgb8u,
+	rgb8s = bgfx.impl.TextureFormat.Enum.rgb8s,
+	rgb9e5f = bgfx.impl.TextureFormat.Enum.rgb9e5f,
+	bgra8 = bgfx.impl.TextureFormat.Enum.bgra8,
+	rgba8 = bgfx.impl.TextureFormat.Enum.rgba8,
+	rgba8i = bgfx.impl.TextureFormat.Enum.rgba8i,
+	rgba8u = bgfx.impl.TextureFormat.Enum.rgba8u,
+	rgba8s = bgfx.impl.TextureFormat.Enum.rgba8s,
+	rgba16 = bgfx.impl.TextureFormat.Enum.rgba16,
+	rgba16i = bgfx.impl.TextureFormat.Enum.rgba16i,
+	rgba16u = bgfx.impl.TextureFormat.Enum.rgba16u,
+	rgba16f = bgfx.impl.TextureFormat.Enum.rgba16f,
+	rgba16s = bgfx.impl.TextureFormat.Enum.rgba16s,
+	rgba32i = bgfx.impl.TextureFormat.Enum.rgba32i,
+	rgba32u = bgfx.impl.TextureFormat.Enum.rgba32u,
+	rgba32f = bgfx.impl.TextureFormat.Enum.rgba32f,
+	b5g6r5 = bgfx.impl.TextureFormat.Enum.b5g6r5,
+	r5g6b5 = bgfx.impl.TextureFormat.Enum.r5g6b5,
+	bgra4 = bgfx.impl.TextureFormat.Enum.bgra4,
+	rgba4 = bgfx.impl.TextureFormat.Enum.rgba4,
+	bgr5a1 = bgfx.impl.TextureFormat.Enum.bgr5a1,
+	rgb5a1 = bgfx.impl.TextureFormat.Enum.rgb5a1,
+	rgb10a2 = bgfx.impl.TextureFormat.Enum.rgb10a2,
+	rg11b10f = bgfx.impl.TextureFormat.Enum.rg11b10f,
+	unknownDepth = bgfx.impl.TextureFormat.Enum.unknownDepth,
+	d16 = bgfx.impl.TextureFormat.Enum.d16,
+	d24 = bgfx.impl.TextureFormat.Enum.d24,
+	d24s8 = bgfx.impl.TextureFormat.Enum.d24s8,
+	d32 = bgfx.impl.TextureFormat.Enum.d32,
+	d16f = bgfx.impl.TextureFormat.Enum.d16f,
+	d24f = bgfx.impl.TextureFormat.Enum.d24f,
+	d32f = bgfx.impl.TextureFormat.Enum.d32f,
+	d0s8 = bgfx.impl.TextureFormat.Enum.d0s8,
+	count = bgfx.impl.TextureFormat.Enum.count,
 }
 
 ///Uniform type enum.
-enum UniformType: bgfx.fakeenum.UniformType.Enum{
-	sampler = bgfx.fakeenum.UniformType.Enum.sampler,
-	end = bgfx.fakeenum.UniformType.Enum.end,
-	vec4 = bgfx.fakeenum.UniformType.Enum.vec4,
-	mat3 = bgfx.fakeenum.UniformType.Enum.mat3,
-	mat4 = bgfx.fakeenum.UniformType.Enum.mat4,
-	count = bgfx.fakeenum.UniformType.Enum.count,
+enum UniformType: bgfx.impl.UniformType.Enum{
+	sampler = bgfx.impl.UniformType.Enum.sampler,
+	end = bgfx.impl.UniformType.Enum.end,
+	vec4 = bgfx.impl.UniformType.Enum.vec4,
+	mat3 = bgfx.impl.UniformType.Enum.mat3,
+	mat4 = bgfx.impl.UniformType.Enum.mat4,
+	count = bgfx.impl.UniformType.Enum.count,
+}
+
+///Uniform frequency enum.
+enum UniformFreq: bgfx.impl.UniformFreq.Enum{
+	draw = bgfx.impl.UniformFreq.Enum.draw,
+	view = bgfx.impl.UniformFreq.Enum.view,
+	frame = bgfx.impl.UniformFreq.Enum.frame,
+	count = bgfx.impl.UniformFreq.Enum.count,
 }
 
 ///Backbuffer ratio enum.
-enum BackbufferRatio: bgfx.fakeenum.BackbufferRatio.Enum{
-	equal = bgfx.fakeenum.BackbufferRatio.Enum.equal,
-	half = bgfx.fakeenum.BackbufferRatio.Enum.half,
-	quarter = bgfx.fakeenum.BackbufferRatio.Enum.quarter,
-	eighth = bgfx.fakeenum.BackbufferRatio.Enum.eighth,
-	sixteenth = bgfx.fakeenum.BackbufferRatio.Enum.sixteenth,
-	double_ = bgfx.fakeenum.BackbufferRatio.Enum.double_,
-	count = bgfx.fakeenum.BackbufferRatio.Enum.count,
+enum BackbufferRatio: bgfx.impl.BackbufferRatio.Enum{
+	equal = bgfx.impl.BackbufferRatio.Enum.equal,
+	half = bgfx.impl.BackbufferRatio.Enum.half,
+	quarter = bgfx.impl.BackbufferRatio.Enum.quarter,
+	eighth = bgfx.impl.BackbufferRatio.Enum.eighth,
+	sixteenth = bgfx.impl.BackbufferRatio.Enum.sixteenth,
+	double_ = bgfx.impl.BackbufferRatio.Enum.double_,
+	count = bgfx.impl.BackbufferRatio.Enum.count,
 }
 
 ///Occlusion query result.
-enum OcclusionQueryResult: bgfx.fakeenum.OcclusionQueryResult.Enum{
-	invisible = bgfx.fakeenum.OcclusionQueryResult.Enum.invisible,
-	visible = bgfx.fakeenum.OcclusionQueryResult.Enum.visible,
-	noResult = bgfx.fakeenum.OcclusionQueryResult.Enum.noResult,
-	count = bgfx.fakeenum.OcclusionQueryResult.Enum.count,
+enum OcclusionQueryResult: bgfx.impl.OcclusionQueryResult.Enum{
+	invisible = bgfx.impl.OcclusionQueryResult.Enum.invisible,
+	visible = bgfx.impl.OcclusionQueryResult.Enum.visible,
+	noResult = bgfx.impl.OcclusionQueryResult.Enum.noResult,
+	count = bgfx.impl.OcclusionQueryResult.Enum.count,
 }
 
 ///Primitive topology.
-enum Topology: bgfx.fakeenum.Topology.Enum{
-	triList = bgfx.fakeenum.Topology.Enum.triList,
-	triStrip = bgfx.fakeenum.Topology.Enum.triStrip,
-	lineList = bgfx.fakeenum.Topology.Enum.lineList,
-	lineStrip = bgfx.fakeenum.Topology.Enum.lineStrip,
-	pointList = bgfx.fakeenum.Topology.Enum.pointList,
-	count = bgfx.fakeenum.Topology.Enum.count,
+enum Topology: bgfx.impl.Topology.Enum{
+	triList = bgfx.impl.Topology.Enum.triList,
+	triStrip = bgfx.impl.Topology.Enum.triStrip,
+	lineList = bgfx.impl.Topology.Enum.lineList,
+	lineStrip = bgfx.impl.Topology.Enum.lineStrip,
+	pointList = bgfx.impl.Topology.Enum.pointList,
+	count = bgfx.impl.Topology.Enum.count,
 }
 
 ///Topology conversion function.
-enum TopologyConvert: bgfx.fakeenum.TopologyConvert.Enum{
-	triListFlipWinding = bgfx.fakeenum.TopologyConvert.Enum.triListFlipWinding,
-	triStripFlipWinding = bgfx.fakeenum.TopologyConvert.Enum.triStripFlipWinding,
-	triListToLineList = bgfx.fakeenum.TopologyConvert.Enum.triListToLineList,
-	triStripToTriList = bgfx.fakeenum.TopologyConvert.Enum.triStripToTriList,
-	lineStripToLineList = bgfx.fakeenum.TopologyConvert.Enum.lineStripToLineList,
-	count = bgfx.fakeenum.TopologyConvert.Enum.count,
+enum TopologyConvert: bgfx.impl.TopologyConvert.Enum{
+	triListFlipWinding = bgfx.impl.TopologyConvert.Enum.triListFlipWinding,
+	triStripFlipWinding = bgfx.impl.TopologyConvert.Enum.triStripFlipWinding,
+	triListToLineList = bgfx.impl.TopologyConvert.Enum.triListToLineList,
+	triStripToTriList = bgfx.impl.TopologyConvert.Enum.triStripToTriList,
+	lineStripToLineList = bgfx.impl.TopologyConvert.Enum.lineStripToLineList,
+	count = bgfx.impl.TopologyConvert.Enum.count,
 }
 
 ///Topology sort order.
-enum TopologySort: bgfx.fakeenum.TopologySort.Enum{
-	directionFrontToBackMin = bgfx.fakeenum.TopologySort.Enum.directionFrontToBackMin,
-	directionFrontToBackAvg = bgfx.fakeenum.TopologySort.Enum.directionFrontToBackAvg,
-	directionFrontToBackMax = bgfx.fakeenum.TopologySort.Enum.directionFrontToBackMax,
-	directionBackToFrontMin = bgfx.fakeenum.TopologySort.Enum.directionBackToFrontMin,
-	directionBackToFrontAvg = bgfx.fakeenum.TopologySort.Enum.directionBackToFrontAvg,
-	directionBackToFrontMax = bgfx.fakeenum.TopologySort.Enum.directionBackToFrontMax,
-	distanceFrontToBackMin = bgfx.fakeenum.TopologySort.Enum.distanceFrontToBackMin,
-	distanceFrontToBackAvg = bgfx.fakeenum.TopologySort.Enum.distanceFrontToBackAvg,
-	distanceFrontToBackMax = bgfx.fakeenum.TopologySort.Enum.distanceFrontToBackMax,
-	distanceBackToFrontMin = bgfx.fakeenum.TopologySort.Enum.distanceBackToFrontMin,
-	distanceBackToFrontAvg = bgfx.fakeenum.TopologySort.Enum.distanceBackToFrontAvg,
-	distanceBackToFrontMax = bgfx.fakeenum.TopologySort.Enum.distanceBackToFrontMax,
-	count = bgfx.fakeenum.TopologySort.Enum.count,
+enum TopologySort: bgfx.impl.TopologySort.Enum{
+	directionFrontToBackMin = bgfx.impl.TopologySort.Enum.directionFrontToBackMin,
+	directionFrontToBackAvg = bgfx.impl.TopologySort.Enum.directionFrontToBackAvg,
+	directionFrontToBackMax = bgfx.impl.TopologySort.Enum.directionFrontToBackMax,
+	directionBackToFrontMin = bgfx.impl.TopologySort.Enum.directionBackToFrontMin,
+	directionBackToFrontAvg = bgfx.impl.TopologySort.Enum.directionBackToFrontAvg,
+	directionBackToFrontMax = bgfx.impl.TopologySort.Enum.directionBackToFrontMax,
+	distanceFrontToBackMin = bgfx.impl.TopologySort.Enum.distanceFrontToBackMin,
+	distanceFrontToBackAvg = bgfx.impl.TopologySort.Enum.distanceFrontToBackAvg,
+	distanceFrontToBackMax = bgfx.impl.TopologySort.Enum.distanceFrontToBackMax,
+	distanceBackToFrontMin = bgfx.impl.TopologySort.Enum.distanceBackToFrontMin,
+	distanceBackToFrontAvg = bgfx.impl.TopologySort.Enum.distanceBackToFrontAvg,
+	distanceBackToFrontMax = bgfx.impl.TopologySort.Enum.distanceBackToFrontMax,
+	count = bgfx.impl.TopologySort.Enum.count,
 }
 
 ///View mode sets draw call sort order.
-enum ViewMode: bgfx.fakeenum.ViewMode.Enum{
-	default_ = bgfx.fakeenum.ViewMode.Enum.default_,
-	sequential = bgfx.fakeenum.ViewMode.Enum.sequential,
-	depthAscending = bgfx.fakeenum.ViewMode.Enum.depthAscending,
-	depthDescending = bgfx.fakeenum.ViewMode.Enum.depthDescending,
-	count = bgfx.fakeenum.ViewMode.Enum.count,
+enum ViewMode: bgfx.impl.ViewMode.Enum{
+	default_ = bgfx.impl.ViewMode.Enum.default_,
+	sequential = bgfx.impl.ViewMode.Enum.sequential,
+	depthAscending = bgfx.impl.ViewMode.Enum.depthAscending,
+	depthDescending = bgfx.impl.ViewMode.Enum.depthDescending,
+	count = bgfx.impl.ViewMode.Enum.count,
+}
+
+///Shading Rate.
+enum ShadingRate: bgfx.impl.ShadingRate.Enum{
+	rate1x1 = bgfx.impl.ShadingRate.Enum.rate1x1,
+	rate1x2 = bgfx.impl.ShadingRate.Enum.rate1x2,
+	rate2x1 = bgfx.impl.ShadingRate.Enum.rate2x1,
+	rate2x2 = bgfx.impl.ShadingRate.Enum.rate2x2,
+	rate2x4 = bgfx.impl.ShadingRate.Enum.rate2x4,
+	rate4x2 = bgfx.impl.ShadingRate.Enum.rate4x2,
+	rate4x4 = bgfx.impl.ShadingRate.Enum.rate4x4,
+	count = bgfx.impl.ShadingRate.Enum.count,
 }
 
 ///Native window handle type.
-enum NativeWindowHandleType: bgfx.fakeenum.NativeWindowHandleType.Enum{
-	default_ = bgfx.fakeenum.NativeWindowHandleType.Enum.default_,
-	wayland = bgfx.fakeenum.NativeWindowHandleType.Enum.wayland,
-	count = bgfx.fakeenum.NativeWindowHandleType.Enum.count,
+enum NativeWindowHandleType: bgfx.impl.NativeWindowHandleType.Enum{
+	default_ = bgfx.impl.NativeWindowHandleType.Enum.default_,
+	wayland = bgfx.impl.NativeWindowHandleType.Enum.wayland,
+	count = bgfx.impl.NativeWindowHandleType.Enum.count,
 }
 
 ///Render frame enum.
-enum RenderFrame: bgfx.fakeenum.RenderFrame.Enum{
-	noContext = bgfx.fakeenum.RenderFrame.Enum.noContext,
-	render = bgfx.fakeenum.RenderFrame.Enum.render,
-	timeout = bgfx.fakeenum.RenderFrame.Enum.timeout,
-	exiting = bgfx.fakeenum.RenderFrame.Enum.exiting,
-	count = bgfx.fakeenum.RenderFrame.Enum.count,
+enum RenderFrame: bgfx.impl.RenderFrame.Enum{
+	noContext = bgfx.impl.RenderFrame.Enum.noContext,
+	render = bgfx.impl.RenderFrame.Enum.render,
+	timeout = bgfx.impl.RenderFrame.Enum.timeout,
+	exiting = bgfx.impl.RenderFrame.Enum.exiting,
+	count = bgfx.impl.RenderFrame.Enum.count,
 }
 
 extern(C++, "bgfx") struct DynamicIndexBufferHandle{
@@ -903,7 +937,28 @@ extern(C++, "bgfx") struct VertexLayoutHandle{
 	ushort idx;
 }
 
-pragma(inline,true) nothrow @nogc pure @safe{
+pragma(inline,true) nothrow @nogc{
+	/**
+	Allocate a buffer to pass to bgfx. Data will be freed inside bgfx.
+	Params:
+		size = Size to allocate.
+	*/
+	MemoryRef alloc(uint size){
+		auto mem = bgfx.impl.alloc(__traits(parameters));
+		return MemoryRef(cast(ubyte[])mem.data[0..mem.size], mem);
+	}
+	/**
+	Allocate a buffer to pass to bgfx and copy `data` into it. Data will be freed inside bgfx.
+	Params:
+		data = Pointer to data to be copied.
+		size = Size of data to be copied.
+	*/
+	MemoryRef copy(const(void)* data, uint size){
+		auto mem = bgfx.impl.copy(__traits(parameters));
+		return MemoryRef(cast(ubyte[])mem.data[0..mem.size], mem);
+	}
+	
+	pure @safe:
 	StateBlend_ blendFuncSeparate(StateBlend_ srcRGB, StateBlend_ dstRGB, StateBlend_ srcA, StateBlend_ dstA){
 		return (srcRGB | ((dstRGB) << 4)) | ((srcA | (dstA << 4)) << 8);
 	}
@@ -969,6 +1024,16 @@ pragma(inline,true) nothrow @nogc pure @safe{
 	}
 }
 
+/**
+A wrapper around `Memory` that allows you to mutate its `data`.
+Do not create instances of this struct yourself.
+*/
+struct MemoryRef{
+	ubyte[] data;
+	const(Memory)* memory;
+	alias memory this;
+}
+
 ///Renderer capabilities.
 extern(C++, "bgfx") struct Caps{
 	///GPU info.
@@ -1000,8 +1065,9 @@ extern(C++, "bgfx") struct Caps{
 		uint maxOcclusionQueries; ///Maximum number of occlusion query handles.
 		uint maxEncoders; ///Maximum number of encoder threads.
 		uint minResourceCBSize; ///Minimum resource command buffer size.
-		uint transientVBSize; ///Maximum transient vertex buffer size.
-		uint transientIBSize; ///Maximum transient index buffer size.
+		uint maxTransientVBSize; ///Maximum transient vertex buffer size.
+		uint maxTansientIBSize; ///Maximum transient index buffer size.
+		uint minUniformBufferSize; ///Mimimum uniform buffer size.
 	}
 	
 	RendererType rendererType; ///Renderer backend type. See: `bgfx::RendererType`
@@ -1010,7 +1076,7 @@ extern(C++, "bgfx") struct Caps{
 	Supported functionality.
 	  @attention See `BGFX_CAPS_*` flags at https://bkaradzic.github.io/bgfx/bgfx.html#available-caps
 	*/
-	ulong supported;
+	c_uint64 supported;
 	ushort vendorID; ///Selected GPU vendor PCI id.
 	ushort deviceID; ///Selected GPU device id.
 	bool homogeneousDepth; ///True when NDC depth is in [-1, 1] range, otherwise its [0, 1].
@@ -1043,8 +1109,9 @@ extern(C++, "bgfx") struct Caps{
 	  - `BGFX_CAPS_FORMAT_TEXTURE_MSAA` - Texture can be sampled as MSAA.
 	  - `BGFX_CAPS_FORMAT_TEXTURE_MIP_AUTOGEN` - Texture format supports auto-generated
 	    mips.
+	  - `BGFX_CAPS_FORMAT_TEXTURE_BACKBUFFER` - Texture format can be used as back buffer format.
 	*/
-	ushort[TextureFormat.count] formats;
+	uint[TextureFormat.count] formats;
 }
 
 ///Internal data.
@@ -1068,6 +1135,7 @@ extern(C++, "bgfx") struct PlatformData{
 	will create context/device.
 	*/
 	void* context;
+	void* queue; ///D3D12 Queue. If `NULL` bgfx will create queue.
 	
 	/**
 	GL back-buffer, or D3D render target view. If `NULL` bgfx will
@@ -1085,7 +1153,8 @@ extern(C++, "bgfx") struct PlatformData{
 
 ///Backbuffer resolution and reset parameters.
 extern(C++, "bgfx") struct Resolution{
-	TextureFormat format; ///Backbuffer format.
+	TextureFormat formatColor; ///Backbuffer color format.
+	TextureFormat formatDepthStencil; ///Backbuffer depth/stencil format.
 	uint width; ///Backbuffer width.
 	uint height; ///Backbuffer height.
 	uint reset; ///Reset parameters.
@@ -1093,12 +1162,11 @@ extern(C++, "bgfx") struct Resolution{
 	ubyte maxFrameLatency; ///Maximum frame latency.
 	ubyte debugTextScale; ///Scale factor for debug text.
 	extern(D) mixin(joinFnBinds((){
-		string[][] ret;
-		ret ~= makeFnBinds([
-			[q{void}, q{this}, q{}, `C++`],
-		], true);
+		FnBind[] ret = [
+			{q{void}, q{this}, q{}, ext: `C++`},
+		];
 		return ret;
-	}(), typeof(this).stringof));
+	}()));
 }
 
 ///Initialization parameters used by `bgfx::init`.
@@ -1107,8 +1175,15 @@ extern(C++, "bgfx") struct Init{
 	extern(C++) struct Limits{
 		ushort maxEncoders; ///Maximum number of encoder threads.
 		uint minResourceCBSize; ///Minimum resource command buffer size.
-		uint transientVBSize; ///Maximum transient vertex buffer size.
-		uint transientIBSize; ///Maximum transient index buffer size.
+		uint maxTransientVBSize; ///Maximum transient vertex buffer size.
+		uint maxTransientIBSize; ///Maximum transient index buffer size.
+		uint minUniformBufferSize; ///Mimimum uniform buffer size.
+		extern(D) mixin(joinFnBinds((){
+			FnBind[] ret = [
+				{q{void}, q{this}, q{}, ext: `C++`},
+			];
+			return ret;
+		}()));
 	}
 	
 	/**
@@ -1136,9 +1211,10 @@ extern(C++, "bgfx") struct Init{
 	matching ID.
 	*/
 	ushort deviceID;
-	ulong capabilities; ///Capabilities initialization mask (default: UINT64_MAX).
+	c_uint64 capabilities; ///Capabilities initialization mask (default: UINT64_MAX).
 	bool debug_; ///Enable device for debugging.
 	bool profile; ///Enable device for profiling.
+	bool fallback; ///Enable fallback to next available renderer.
 	PlatformData platformData; ///Platform data.
 	Resolution resolution; ///Backbuffer resolution and reset parameters. See: `bgfx::Resolution`.
 	Limits limits; ///Configurable runtime limits parameters.
@@ -1156,12 +1232,11 @@ extern(C++, "bgfx") struct Init{
 	*/
 	void* allocator;
 	extern(D) mixin(joinFnBinds((){
-		string[][] ret;
-		ret ~= makeFnBinds([
-			[q{void}, q{this}, q{}, `C++`],
-		], true);
+		FnBind[] ret = [
+			{q{void}, q{this}, q{}, ext: `C++`},
+		];
 		return ret;
-	}(), typeof(this).stringof));
+	}()));
 }
 
 /**
@@ -1231,8 +1306,7 @@ extern(C++, "bgfx") struct Attachment{
 	ushort numLayers; ///Number of texture layer/slice(s) in array to use.
 	ubyte resolve; ///Resolve flags. See: `BGFX_RESOLVE_*`
 	extern(D) mixin(joinFnBinds((){
-		string[][] ret;
-		ret ~= makeFnBinds([
+		FnBind[] ret = [
 			/**
 			Init attachment.
 			Params:
@@ -1243,10 +1317,10 @@ extern(C++, "bgfx") struct Attachment{
 				mip = Mip level.
 				resolve = Resolve flags. See: `BGFX_RESOLVE_*`
 			*/
-			[q{void}, q{init}, q{TextureHandle handle, bgfx.fakeenum.Access.Enum access=Access.write, ushort layer=0, ushort numLayers=1, ushort mip=0, ubyte resolve=Resolve.autoGenMIPs}, `C++`],
-		], true);
+			{q{void}, q{init}, q{TextureHandle handle, bgfx.impl.Access.Enum access=Access.write, ushort layer=0, ushort numLayers=1, ushort mip=0, ubyte resolve=Resolve.autoGenMIPs}, ext: `C++`},
+		];
 		return ret;
-	}(), typeof(this).stringof));
+	}()));
 }
 
 ///Transform data.
@@ -1259,17 +1333,17 @@ extern(C++, "bgfx") struct Transform{
 extern(C++, "bgfx") struct ViewStats{
 	char[256] name; ///View name.
 	ViewID view; ///View id.
-	long cpuTimeBegin; ///CPU (submit) begin time.
-	long cpuTimeEnd; ///CPU (submit) end time.
-	long gpuTimeBegin; ///GPU begin time.
-	long gpuTimeEnd; ///GPU end time.
+	c_int64 cpuTimeBegin; ///CPU (submit) begin time.
+	c_int64 cpuTimeEnd; ///CPU (submit) end time.
+	c_int64 gpuTimeBegin; ///GPU begin time.
+	c_int64 gpuTimeEnd; ///GPU end time.
 	uint gpuFrameNum; ///Frame which generated gpuTimeBegin, gpuTimeEnd.
 }
 
 ///Encoder stats.
 extern(C++, "bgfx") struct EncoderStats{
-	long cpuTimeBegin; ///Encoder thread CPU submit begin time.
-	long cpuTimeEnd; ///Encoder thread CPU submit end time.
+	c_int64 cpuTimeBegin; ///Encoder thread CPU submit begin time.
+	c_int64 cpuTimeEnd; ///Encoder thread CPU submit end time.
 }
 
 /**
@@ -1278,15 +1352,15 @@ Renderer statistics data.
 time frequencies define timestamps-per-second for that hardware.
 */
 extern(C++, "bgfx") struct Stats{
-	long cpuTimeFrame; ///CPU time between two `bgfx::frame` calls.
-	long cpuTimeBegin; ///Render thread CPU submit begin time.
-	long cpuTimeEnd; ///Render thread CPU submit end time.
-	long cpuTimerFreq; ///CPU timer frequency. Timestamps-per-second
-	long gpuTimeBegin; ///GPU frame begin time.
-	long gpuTimeEnd; ///GPU frame end time.
-	long gpuTimerFreq; ///GPU timer frequency.
-	long waitRender; ///Time spent waiting for render backend thread to finish issuing draw commands to underlying graphics API.
-	long waitSubmit; ///Time spent waiting for submit thread to advance to next frame.
+	c_int64 cpuTimeFrame; ///CPU time between two `bgfx::frame` calls.
+	c_int64 cpuTimeBegin; ///Render thread CPU submit begin time.
+	c_int64 cpuTimeEnd; ///Render thread CPU submit end time.
+	c_int64 cpuTimerFreq; ///CPU timer frequency. Timestamps-per-second
+	c_int64 gpuTimeBegin; ///GPU frame begin time.
+	c_int64 gpuTimeEnd; ///GPU frame end time.
+	c_int64 gpuTimerFreq; ///GPU timer frequency.
+	c_int64 waitRender; ///Time spent waiting for render backend thread to finish issuing draw commands to underlying graphics API.
+	c_int64 waitSubmit; ///Time spent waiting for submit thread to advance to next frame.
 	uint numDraw; ///Number of draw calls submitted.
 	uint numCompute; ///Number of compute calls submitted.
 	uint numBlit; ///Number of blit calls submitted.
@@ -1303,13 +1377,13 @@ extern(C++, "bgfx") struct Stats{
 	ushort numUniforms; ///Number of used uniforms.
 	ushort numVertexBuffers; ///Number of used vertex buffers.
 	ushort numVertexLayouts; ///Number of used vertex layouts.
-	long textureMemoryUsed; ///Estimate of texture memory used.
-	long rtMemoryUsed; ///Estimate of render target memory used.
+	c_int64 textureMemoryUsed; ///Estimate of texture memory used.
+	c_int64 rtMemoryUsed; ///Estimate of render target memory used.
 	int transientVBUsed; ///Amount of transient vertex buffer used.
 	int transientIBUsed; ///Amount of transient index buffer used.
 	uint[Topology.count] numPrims; ///Number of primitives rendered.
-	long gpuMemoryMax; ///Maximum available GPU memory for application.
-	long gpuMemoryUsed; ///Amount of GPU memory used by the application.
+	c_int64 gpuMemoryMax; ///Maximum available GPU memory for application.
+	c_int64 gpuMemoryUsed; ///Amount of GPU memory used by the application.
 	ushort width; ///Backbuffer width in pixels.
 	ushort height; ///Backbuffer height in pixels.
 	ushort textWidth; ///Debug text width in characters.
@@ -1327,16 +1401,15 @@ extern(C++, "bgfx") struct VertexLayout{
 	ushort[Attrib.count] offset; ///Attribute offsets.
 	ushort[Attrib.count] attributes; ///Used attributes.
 	extern(D) mixin(joinFnBinds((){
-		string[][] ret;
-		ret ~= makeFnBinds([
-			[q{void}, q{this}, q{}, `C++`],
+		FnBind[] ret = [
+			{q{void}, q{this}, q{}, ext: `C++`},
 			
 			/**
 			Start VertexLayout.
 			Params:
 				rendererType = Renderer backend type. See: `bgfx::RendererType`
 			*/
-			[q{VertexLayout*}, q{begin}, q{bgfx.fakeenum.RendererType.Enum rendererType=RendererType.noop}, `C++`],
+			{q{VertexLayout*}, q{begin}, q{bgfx.impl.RendererType.Enum rendererType=RendererType.noop}, ext: `C++`},
 			
 			/**
 			Add attribute to VertexLayout.
@@ -1345,7 +1418,7 @@ extern(C++, "bgfx") struct VertexLayout{
 				attrib = Attribute semantics. See: `bgfx::Attrib`
 				num = Number of elements 1, 2, 3 or 4.
 				type = Element type.
-				normalized = When using fixed point AttribType (f.e. Uint8)
+				normalised = When using fixed point AttribType (f.e. Uint8)
 			value will be normalized for vertex shader usage. When normalized
 			is set to true, AttribType::Uint8 value in range 0-255 will be
 			in range 0.0-1.0 in vertex shader.
@@ -1353,7 +1426,7 @@ extern(C++, "bgfx") struct VertexLayout{
 			vertexConvert for AttribType::Uint8 and AttribType::Int16.
 			Unpacking code must be implemented inside vertex shader.
 			*/
-			[q{VertexLayout*}, q{add}, q{bgfx.fakeenum.Attrib.Enum attrib, ubyte num, bgfx.fakeenum.AttribType.Enum type, bool normalized=false, bool asInt=false}, `C++`],
+			{q{VertexLayout*}, q{add}, q{bgfx.impl.Attrib.Enum attrib, ubyte num, bgfx.impl.AttribType.Enum type, bool normalised=false, bool asInt=false}, ext: `C++`},
 			
 			/**
 			Decode attribute.
@@ -1361,25 +1434,25 @@ extern(C++, "bgfx") struct VertexLayout{
 				attrib = Attribute semantics. See: `bgfx::Attrib`
 				num = Number of elements.
 				type = Element type.
-				normalized = Attribute is normalized.
+				normalised = Attribute is normalized.
 				asInt = Attribute is packed as int.
 			*/
-			[q{void}, q{decode}, q{bgfx.fakeenum.Attrib.Enum attrib, ref ubyte num, ref bgfx.fakeenum.AttribType.Enum type, ref bool normalized, ref bool asInt}, `C++`, q{const}],
+			{q{void}, q{decode}, q{bgfx.impl.Attrib.Enum attrib, ref ubyte num, ref bgfx.impl.AttribType.Enum type, ref bool normalised, ref bool asInt}, ext: `C++`, memAttr: q{const}},
 			
 			/**
 			Skip `_num` bytes in vertex stream.
 			Params:
 				num = Number of bytes to skip.
 			*/
-			[q{VertexLayout*}, q{skip}, q{ubyte num}, `C++`],
+			{q{VertexLayout*}, q{skip}, q{ubyte num}, ext: `C++`},
 			
 			/**
 			End VertexLayout.
 			*/
-			[q{void}, q{end}, q{}, `C++`],
-		], true);
+			{q{void}, q{end}, q{}, ext: `C++`},
+		];
 		return ret;
-	}(), typeof(this).stringof));
+	}()));
 }
 
 /**
@@ -1388,15 +1461,16 @@ per thread should be used. Use `bgfx::begin()` to obtain an encoder for a thread
 */
 extern(C++, "bgfx") struct Encoder{
 	extern(D) mixin(joinFnBinds((){
-		string[][] ret;
-		ret ~= makeFnBinds([
+		FnBind[] ret = [
 			/**
 			Sets a debug marker. This allows you to group graphics calls together for easy browsing in
 			graphics debugging tools.
 			Params:
-				marker = Marker string.
+				name = Marker name.
+				len = Marker name length (if length is INT32_MAX, it's expected
+			that _name is zero terminated string.
 			*/
-			[q{void}, q{setMarker}, q{const(char)* marker}, `C++`],
+			{q{void}, q{setMarker}, q{const(char)* name, int len=int.max}, ext: `C++`},
 			
 			/**
 			Set render states for draw primitive.
@@ -1423,7 +1497,7 @@ extern(C++, "bgfx") struct Encoder{
 				rgba = Sets blend factor used by `BGFX_STATE_BLEND_FACTOR` and
 			  `BGFX_STATE_BLEND_INV_FACTOR` blend modes.
 			*/
-			[q{void}, q{setState}, q{ulong state, uint rgba=0}, `C++`],
+			{q{void}, q{setState}, q{c_uint64 state, uint rgba=0}, ext: `C++`},
 			
 			/**
 			Set condition for rendering.
@@ -1431,16 +1505,16 @@ extern(C++, "bgfx") struct Encoder{
 				handle = Occlusion query handle.
 				visible = Render if occlusion query is visible.
 			*/
-			[q{void}, q{setCondition}, q{OcclusionQueryHandle handle, bool visible}, `C++`],
+			{q{void}, q{setCondition}, q{OcclusionQueryHandle handle, bool visible}, ext: `C++`},
 			
 			/**
 			Set stencil test state.
 			Params:
-				fstencil = Front stencil state.
-				bstencil = Back stencil state. If back is set to `BGFX_STENCIL_NONE`
+				fStencil = Front stencil state.
+				bStencil = Back stencil state. If back is set to `BGFX_STENCIL_NONE`
 			_fstencil is applied to both front and back facing primitives.
 			*/
-			[q{void}, q{setStencil}, q{uint fstencil, uint bstencil=Stencil.none}, `C++`],
+			{q{void}, q{setStencil}, q{uint fStencil, uint bStencil=Stencil.none}, ext: `C++`},
 			
 			/**
 			Set scissor for draw primitive.
@@ -1452,7 +1526,7 @@ extern(C++, "bgfx") struct Encoder{
 				width = Width of view scissor region.
 				height = Height of view scissor region.
 			*/
-			[q{ushort}, q{setScissor}, q{ushort x, ushort y, ushort width, ushort height}, `C++`],
+			{q{ushort}, q{setScissor}, q{ushort x, ushort y, ushort width, ushort height}, ext: `C++`},
 			
 			/**
 			Set scissor from cache for draw primitive.
@@ -1461,7 +1535,7 @@ extern(C++, "bgfx") struct Encoder{
 			Params:
 				cache = Index in scissor cache.
 			*/
-			[q{void}, q{setScissor}, q{ushort cache=ushort.max}, `C++`],
+			{q{void}, q{setScissor}, q{ushort cache=ushort.max}, ext: `C++`},
 			
 			/**
 			Set model matrix for draw primitive. If it is not called,
@@ -1470,7 +1544,7 @@ extern(C++, "bgfx") struct Encoder{
 				mtx = Pointer to first matrix in array.
 				num = Number of matrices in array.
 			*/
-			[q{uint}, q{setTransform}, q{const(void)* mtx, ushort num=1}, `C++`],
+			{q{uint}, q{setTransform}, q{const(void)* mtx, ushort num=1}, ext: `C++`},
 			
 			/**
 			 Set model matrix from matrix cache for draw primitive.
@@ -1478,7 +1552,7 @@ extern(C++, "bgfx") struct Encoder{
 				cache = Index in matrix cache.
 				num = Number of matrices from cache.
 			*/
-			[q{void}, q{setTransform}, q{uint cache, ushort num=1}, `C++`],
+			{q{void}, q{setTransform}, q{uint cache, ushort num=1}, ext: `C++`},
 			
 			/**
 			Reserve matrices in internal matrix cache.
@@ -1487,7 +1561,7 @@ extern(C++, "bgfx") struct Encoder{
 				transform = Pointer to `Transform` structure.
 				num = Number of matrices.
 			*/
-			[q{uint}, q{allocTransform}, q{Transform* transform, ushort num}, `C++`],
+			{q{uint}, q{allocTransform}, q{Transform* transform, ushort num}, ext: `C++`},
 			
 			/**
 			Set shader uniform parameter for draw primitive.
@@ -1497,14 +1571,14 @@ extern(C++, "bgfx") struct Encoder{
 				num = Number of elements. Passing `UINT16_MAX` will
 			use the _num passed on uniform creation.
 			*/
-			[q{void}, q{setUniform}, q{UniformHandle handle, const(void)* value, ushort num=1}, `C++`],
+			{q{void}, q{setUniform}, q{UniformHandle handle, const(void)* value, ushort num=1}, ext: `C++`},
 			
 			/**
 			Set index buffer for draw primitive.
 			Params:
 				handle = Index buffer.
 			*/
-			[q{void}, q{setIndexBuffer}, q{IndexBufferHandle handle}, `C++`],
+			{q{void}, q{setIndexBuffer}, q{IndexBufferHandle handle}, ext: `C++`},
 			
 			/**
 			Set index buffer for draw primitive.
@@ -1513,14 +1587,14 @@ extern(C++, "bgfx") struct Encoder{
 				firstIndex = First index to render.
 				numIndices = Number of indices to render.
 			*/
-			[q{void}, q{setIndexBuffer}, q{IndexBufferHandle handle, uint firstIndex, uint numIndices}, `C++`],
+			{q{void}, q{setIndexBuffer}, q{IndexBufferHandle handle, uint firstIndex, uint numIndices}, ext: `C++`},
 			
 			/**
 			Set index buffer for draw primitive.
 			Params:
 				handle = Dynamic index buffer.
 			*/
-			[q{void}, q{setIndexBuffer}, q{DynamicIndexBufferHandle handle}, `C++`],
+			{q{void}, q{setIndexBuffer}, q{DynamicIndexBufferHandle handle}, ext: `C++`},
 			
 			/**
 			Set index buffer for draw primitive.
@@ -1529,14 +1603,14 @@ extern(C++, "bgfx") struct Encoder{
 				firstIndex = First index to render.
 				numIndices = Number of indices to render.
 			*/
-			[q{void}, q{setIndexBuffer}, q{DynamicIndexBufferHandle handle, uint firstIndex, uint numIndices}, `C++`],
+			{q{void}, q{setIndexBuffer}, q{DynamicIndexBufferHandle handle, uint firstIndex, uint numIndices}, ext: `C++`},
 			
 			/**
 			Set index buffer for draw primitive.
 			Params:
 				tib = Transient index buffer.
 			*/
-			[q{void}, q{setIndexBuffer}, q{const(TransientIndexBuffer)* tib}, `C++`],
+			{q{void}, q{setIndexBuffer}, q{const(TransientIndexBuffer)* tib}, ext: `C++`},
 			
 			/**
 			Set index buffer for draw primitive.
@@ -1545,7 +1619,7 @@ extern(C++, "bgfx") struct Encoder{
 				firstIndex = First index to render.
 				numIndices = Number of indices to render.
 			*/
-			[q{void}, q{setIndexBuffer}, q{const(TransientIndexBuffer)* tib, uint firstIndex, uint numIndices}, `C++`],
+			{q{void}, q{setIndexBuffer}, q{const(TransientIndexBuffer)* tib, uint firstIndex, uint numIndices}, ext: `C++`},
 			
 			/**
 			Set vertex buffer for draw primitive.
@@ -1553,7 +1627,7 @@ extern(C++, "bgfx") struct Encoder{
 				stream = Vertex stream.
 				handle = Vertex buffer.
 			*/
-			[q{void}, q{setVertexBuffer}, q{ubyte stream, VertexBufferHandle handle}, `C++`],
+			{q{void}, q{setVertexBuffer}, q{ubyte stream, VertexBufferHandle handle}, ext: `C++`},
 			
 			/**
 			Set vertex buffer for draw primitive.
@@ -1566,7 +1640,7 @@ extern(C++, "bgfx") struct Encoder{
 			handle is used, vertex layout used for creation
 			of vertex buffer will be used.
 			*/
-			[q{void}, q{setVertexBuffer}, q{ubyte stream, VertexBufferHandle handle, uint startVertex, uint numVertices, VertexLayoutHandle layoutHandle=invalidHandle!VertexLayoutHandle}, `C++`],
+			{q{void}, q{setVertexBuffer}, q{ubyte stream, VertexBufferHandle handle, uint startVertex, uint numVertices, VertexLayoutHandle layoutHandle=invalidHandle!VertexLayoutHandle}, ext: `C++`},
 			
 			/**
 			Set vertex buffer for draw primitive.
@@ -1574,8 +1648,8 @@ extern(C++, "bgfx") struct Encoder{
 				stream = Vertex stream.
 				handle = Dynamic vertex buffer.
 			*/
-			[q{void}, q{setVertexBuffer}, q{ubyte stream, DynamicVertexBufferHandle handle}, `C++`],
-			[q{void}, q{setVertexBuffer}, q{ubyte stream, DynamicVertexBufferHandle handle, uint startVertex, uint numVertices, VertexLayoutHandle layoutHandle=invalidHandle!VertexLayoutHandle}, `C++`],
+			{q{void}, q{setVertexBuffer}, q{ubyte stream, DynamicVertexBufferHandle handle}, ext: `C++`},
+			{q{void}, q{setVertexBuffer}, q{ubyte stream, DynamicVertexBufferHandle handle, uint startVertex, uint numVertices, VertexLayoutHandle layoutHandle=invalidHandle!VertexLayoutHandle}, ext: `C++`},
 			
 			/**
 			Set vertex buffer for draw primitive.
@@ -1583,7 +1657,7 @@ extern(C++, "bgfx") struct Encoder{
 				stream = Vertex stream.
 				tvb = Transient vertex buffer.
 			*/
-			[q{void}, q{setVertexBuffer}, q{ubyte stream, const(TransientVertexBuffer)* tvb}, `C++`],
+			{q{void}, q{setVertexBuffer}, q{ubyte stream, const(TransientVertexBuffer)* tvb}, ext: `C++`},
 			
 			/**
 			Set vertex buffer for draw primitive.
@@ -1596,7 +1670,7 @@ extern(C++, "bgfx") struct Encoder{
 			handle is used, vertex layout used for creation
 			of vertex buffer will be used.
 			*/
-			[q{void}, q{setVertexBuffer}, q{ubyte stream, const(TransientVertexBuffer)* tvb, uint startVertex, uint numVertices, VertexLayoutHandle layoutHandle=invalidHandle!VertexLayoutHandle}, `C++`],
+			{q{void}, q{setVertexBuffer}, q{ubyte stream, const(TransientVertexBuffer)* tvb, uint startVertex, uint numVertices, VertexLayoutHandle layoutHandle=invalidHandle!VertexLayoutHandle}, ext: `C++`},
 			
 			/**
 			Set number of vertices for auto generated vertices use in conjunction
@@ -1605,14 +1679,14 @@ extern(C++, "bgfx") struct Encoder{
 			Params:
 				numVertices = Number of vertices.
 			*/
-			[q{void}, q{setVertexCount}, q{uint numVertices}, `C++`],
+			{q{void}, q{setVertexCount}, q{uint numVertices}, ext: `C++`},
 			
 			/**
 			Set instance data buffer for draw primitive.
 			Params:
 				idb = Transient instance data buffer.
 			*/
-			[q{void}, q{setInstanceDataBuffer}, q{const(InstanceDataBuffer)* idb}, `C++`],
+			{q{void}, q{setInstanceDataBuffer}, q{const(InstanceDataBuffer)* idb}, ext: `C++`},
 			
 			/**
 			Set instance data buffer for draw primitive.
@@ -1621,7 +1695,7 @@ extern(C++, "bgfx") struct Encoder{
 				start = First instance data.
 				num = Number of data instances.
 			*/
-			[q{void}, q{setInstanceDataBuffer}, q{const(InstanceDataBuffer)* idb, uint start, uint num}, `C++`],
+			{q{void}, q{setInstanceDataBuffer}, q{const(InstanceDataBuffer)* idb, uint start, uint num}, ext: `C++`},
 			
 			/**
 			Set instance data buffer for draw primitive.
@@ -1630,7 +1704,7 @@ extern(C++, "bgfx") struct Encoder{
 				startVertex = First instance data.
 				num = Number of data instances.
 			*/
-			[q{void}, q{setInstanceDataBuffer}, q{VertexBufferHandle handle, uint startVertex, uint num}, `C++`],
+			{q{void}, q{setInstanceDataBuffer}, q{VertexBufferHandle handle, uint startVertex, uint num}, ext: `C++`},
 			
 			/**
 			Set instance data buffer for draw primitive.
@@ -1639,14 +1713,16 @@ extern(C++, "bgfx") struct Encoder{
 				startVertex = First instance data.
 				num = Number of data instances.
 			*/
-			[q{void}, q{setInstanceDataBuffer}, q{DynamicVertexBufferHandle handle, uint startVertex, uint num}, `C++`],
+			{q{void}, q{setInstanceDataBuffer}, q{DynamicVertexBufferHandle handle, uint startVertex, uint num}, ext: `C++`},
 			
 			/**
 			Set number of instances for auto generated instances use in conjunction
 			with gl_InstanceID.
 			Attention: Availability depends on: `BGFX_CAPS_VERTEX_ID`.
+			Params:
+				numInstances = Number of instances.
 			*/
-			[q{void}, q{setInstanceCount}, q{uint numInstances}, `C++`],
+			{q{void}, q{setInstanceCount}, q{uint numInstances}, ext: `C++`},
 			
 			/**
 			Set texture stage for draw primitive.
@@ -1661,7 +1737,7 @@ extern(C++, "bgfx") struct Encoder{
 			  - `BGFX_SAMPLER_[MIN/MAG/MIP]_[POINT/ANISOTROPIC]` - Point or anisotropic
 			    sampling.
 			*/
-			[q{void}, q{setTexture}, q{ubyte stage, UniformHandle sampler, TextureHandle handle, uint flags=uint.max}, `C++`],
+			{q{void}, q{setTexture}, q{ubyte stage, UniformHandle sampler, TextureHandle handle, uint flags=uint.max}, ext: `C++`},
 			
 			/**
 			Submit an empty primitive for rendering. Uniforms and draw state
@@ -1673,7 +1749,7 @@ extern(C++, "bgfx") struct Encoder{
 			Params:
 				id = View id.
 			*/
-			[q{void}, q{touch}, q{ViewID id}, `C++`],
+			{q{void}, q{touch}, q{ViewID id}, ext: `C++`},
 			
 			/**
 			Submit primitive for rendering.
@@ -1683,7 +1759,7 @@ extern(C++, "bgfx") struct Encoder{
 				depth = Depth for sorting.
 				flags = Discard or preserve states. See `BGFX_DISCARD_*`.
 			*/
-			[q{void}, q{submit}, q{ViewID id, ProgramHandle program, uint depth=0, ubyte flags=Discard.all}, `C++`],
+			{q{void}, q{submit}, q{ViewID id, ProgramHandle program, uint depth=0, ubyte flags=Discard.all}, ext: `C++`},
 			
 			/**
 			Submit primitive with occlusion query for rendering.
@@ -1694,7 +1770,7 @@ extern(C++, "bgfx") struct Encoder{
 				depth = Depth for sorting.
 				flags = Discard or preserve states. See `BGFX_DISCARD_*`.
 			*/
-			[q{void}, q{submit}, q{ViewID id, ProgramHandle program, OcclusionQueryHandle occlusionQuery, uint depth=0, ubyte flags=Discard.all}, `C++`],
+			{q{void}, q{submit}, q{ViewID id, ProgramHandle program, OcclusionQueryHandle occlusionQuery, uint depth=0, ubyte flags=Discard.all}, ext: `C++`},
 			
 			/**
 			Submit primitive for rendering with index and instance data info from
@@ -1709,7 +1785,7 @@ extern(C++, "bgfx") struct Encoder{
 				depth = Depth for sorting.
 				flags = Discard or preserve states. See `BGFX_DISCARD_*`.
 			*/
-			[q{void}, q{submit}, q{ViewID id, ProgramHandle program, IndirectBufferHandle indirectHandle, ushort start=0, ushort num=1, uint depth=0, ubyte flags=Discard.all}, `C++`],
+			{q{void}, q{submit}, q{ViewID id, ProgramHandle program, IndirectBufferHandle indirectHandle, uint start=0, uint num=1, uint depth=0, ubyte flags=Discard.all}, ext: `C++`},
 			
 			/**
 			Submit primitive for rendering with index and instance data info and
@@ -1727,7 +1803,7 @@ extern(C++, "bgfx") struct Encoder{
 				depth = Depth for sorting.
 				flags = Discard or preserve states. See `BGFX_DISCARD_*`.
 			*/
-			[q{void}, q{submit}, q{ViewID id, ProgramHandle program, IndirectBufferHandle indirectHandle, ushort start, IndexBufferHandle numHandle, uint numIndex=0, ushort numMax=ushort.max, uint depth=0, ubyte flags=Discard.all}, `C++`],
+			{q{void}, q{submit}, q{ViewID id, ProgramHandle program, IndirectBufferHandle indirectHandle, uint start, IndexBufferHandle numHandle, uint numIndex=0, uint numMax=uint.max, uint depth=0, ubyte flags=Discard.all}, ext: `C++`},
 			
 			/**
 			Set compute index buffer.
@@ -1736,7 +1812,7 @@ extern(C++, "bgfx") struct Encoder{
 				handle = Index buffer handle.
 				access = Buffer access. See `Access::Enum`.
 			*/
-			[q{void}, q{setBuffer}, q{ubyte stage, IndexBufferHandle handle, bgfx.fakeenum.Access.Enum access}, `C++`],
+			{q{void}, q{setBuffer}, q{ubyte stage, IndexBufferHandle handle, bgfx.impl.Access.Enum access}, ext: `C++`},
 			
 			/**
 			Set compute vertex buffer.
@@ -1745,7 +1821,7 @@ extern(C++, "bgfx") struct Encoder{
 				handle = Vertex buffer handle.
 				access = Buffer access. See `Access::Enum`.
 			*/
-			[q{void}, q{setBuffer}, q{ubyte stage, VertexBufferHandle handle, bgfx.fakeenum.Access.Enum access}, `C++`],
+			{q{void}, q{setBuffer}, q{ubyte stage, VertexBufferHandle handle, bgfx.impl.Access.Enum access}, ext: `C++`},
 			
 			/**
 			Set compute dynamic index buffer.
@@ -1754,7 +1830,7 @@ extern(C++, "bgfx") struct Encoder{
 				handle = Dynamic index buffer handle.
 				access = Buffer access. See `Access::Enum`.
 			*/
-			[q{void}, q{setBuffer}, q{ubyte stage, DynamicIndexBufferHandle handle, bgfx.fakeenum.Access.Enum access}, `C++`],
+			{q{void}, q{setBuffer}, q{ubyte stage, DynamicIndexBufferHandle handle, bgfx.impl.Access.Enum access}, ext: `C++`},
 			
 			/**
 			Set compute dynamic vertex buffer.
@@ -1763,7 +1839,7 @@ extern(C++, "bgfx") struct Encoder{
 				handle = Dynamic vertex buffer handle.
 				access = Buffer access. See `Access::Enum`.
 			*/
-			[q{void}, q{setBuffer}, q{ubyte stage, DynamicVertexBufferHandle handle, bgfx.fakeenum.Access.Enum access}, `C++`],
+			{q{void}, q{setBuffer}, q{ubyte stage, DynamicVertexBufferHandle handle, bgfx.impl.Access.Enum access}, ext: `C++`},
 			
 			/**
 			Set compute indirect buffer.
@@ -1772,7 +1848,7 @@ extern(C++, "bgfx") struct Encoder{
 				handle = Indirect buffer handle.
 				access = Buffer access. See `Access::Enum`.
 			*/
-			[q{void}, q{setBuffer}, q{ubyte stage, IndirectBufferHandle handle, bgfx.fakeenum.Access.Enum access}, `C++`],
+			{q{void}, q{setBuffer}, q{ubyte stage, IndirectBufferHandle handle, bgfx.impl.Access.Enum access}, ext: `C++`},
 			
 			/**
 			Set compute image from texture.
@@ -1783,7 +1859,7 @@ extern(C++, "bgfx") struct Encoder{
 				access = Image access. See `Access::Enum`.
 				format = Texture format. See: `TextureFormat::Enum`.
 			*/
-			[q{void}, q{setImage}, q{ubyte stage, TextureHandle handle, ubyte mip, bgfx.fakeenum.Access.Enum access, bgfx.fakeenum.TextureFormat.Enum format=TextureFormat.count}, `C++`],
+			{q{void}, q{setImage}, q{ubyte stage, TextureHandle handle, ubyte mip, bgfx.impl.Access.Enum access, bgfx.impl.TextureFormat.Enum format=TextureFormat.count}, ext: `C++`},
 			
 			/**
 			Dispatch compute.
@@ -1795,7 +1871,7 @@ extern(C++, "bgfx") struct Encoder{
 				numZ = Number of groups Z.
 				flags = Discard or preserve states. See `BGFX_DISCARD_*`.
 			*/
-			[q{void}, q{dispatch}, q{ViewID id, ProgramHandle program, uint numX=1, uint numY=1, uint numZ=1, ubyte flags=Discard.all}, `C++`],
+			{q{void}, q{dispatch}, q{ViewID id, ProgramHandle program, uint numX=1, uint numY=1, uint numZ=1, ubyte flags=Discard.all}, ext: `C++`},
 			
 			/**
 			Dispatch compute indirect.
@@ -1807,14 +1883,14 @@ extern(C++, "bgfx") struct Encoder{
 				num = Number of dispatches.
 				flags = Discard or preserve states. See `BGFX_DISCARD_*`.
 			*/
-			[q{void}, q{dispatch}, q{ViewID id, ProgramHandle program, IndirectBufferHandle indirectHandle, ushort start=0, ushort num=1, ubyte flags=Discard.all}, `C++`],
+			{q{void}, q{dispatch}, q{ViewID id, ProgramHandle program, IndirectBufferHandle indirectHandle, uint start=0, uint num=1, ubyte flags=Discard.all}, ext: `C++`},
 			
 			/**
 			Discard previously set state for draw or compute call.
 			Params:
 				flags = Discard or preserve states. See `BGFX_DISCARD_*`.
 			*/
-			[q{void}, q{discard}, q{ubyte flags=Discard.all}, `C++`],
+			{q{void}, q{discard}, q{ubyte flags=Discard.all}, ext: `C++`},
 			
 			/**
 			Blit 2D texture region between two 2D textures.
@@ -1831,7 +1907,7 @@ extern(C++, "bgfx") struct Encoder{
 				width = Width of region.
 				height = Height of region.
 			*/
-			[q{void}, q{blit}, q{ViewID id, TextureHandle dst, ushort dstX, ushort dstY, TextureHandle src, ushort srcX=0, ushort srcY=0, ushort width=ushort.max, ushort height=ushort.max}, `C++`],
+			{q{void}, q{blit}, q{ViewID id, TextureHandle dst, ushort dstX, ushort dstY, TextureHandle src, ushort srcX=0, ushort srcY=0, ushort width=ushort.max, ushort height=ushort.max}, ext: `C++`},
 			
 			/**
 			Blit 2D texture region between two 2D textures.
@@ -1858,26 +1934,25 @@ extern(C++, "bgfx") struct Encoder{
 				depth = If texture is 3D this argument represents depth of region, otherwise it's
 			unused.
 			*/
-			[q{void}, q{blit}, q{ViewID id, TextureHandle dst, ubyte dstMIP, ushort dstX, ushort dstY, ushort dstZ, TextureHandle src, ubyte srcMIP=0, ushort srcX=0, ushort srcY=0, ushort srcZ=0, ushort width=ushort.max, ushort height=ushort.max, ushort depth=ushort.max}, `C++`],
-		], true);
+			{q{void}, q{blit}, q{ViewID id, TextureHandle dst, ubyte dstMIP, ushort dstX, ushort dstY, ushort dstZ, TextureHandle src, ubyte srcMIP=0, ushort srcX=0, ushort srcY=0, ushort srcZ=0, ushort width=ushort.max, ushort height=ushort.max, ushort depth=ushort.max}, ext: `C++`},
+		];
 		return ret;
-	}(), typeof(this).stringof));
+	}()));
 }
 
 mixin(joinFnBinds((){
-	string[][] ret;
-	ret ~= makeFnBinds([
+	FnBind[] ret = [
 		/**
 		* Pack vertex attribute into vertex stream format.
 		Params:
 			input = Value to be packed into vertex stream.
-			inputNormalized = `true` if input value is already normalized.
+			inputNormalised = `true` if input value is already normalized.
 			attr = Attribute to pack.
 			layout = Vertex stream layout.
 			data = Destination vertex stream where data will be packed.
 			index = Vertex index that will be modified.
 		*/
-		[q{void}, q{vertexPack}, q{const(float)* input, bool inputNormalized, bgfx.fakeenum.Attrib.Enum attr, ref const VertexLayout layout, void* data, uint index=0}, `C++, "bgfx"`],
+		{q{void}, q{vertexPack}, q{const(float)* input, bool inputNormalised, bgfx.impl.Attrib.Enum attr, ref const VertexLayout layout, void* data, uint index=0}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Unpack vertex attribute from vertex stream format.
@@ -1888,7 +1963,7 @@ mixin(joinFnBinds((){
 			data = Source vertex stream from where data will be unpacked.
 			index = Vertex index that will be unpacked.
 		*/
-		[q{void}, q{vertexUnpack}, q{float* output, bgfx.fakeenum.Attrib.Enum attr, ref const VertexLayout layout, const(void)* data, uint index=0}, `C++, "bgfx"`],
+		{q{void}, q{vertexUnpack}, q{float* output, bgfx.impl.Attrib.Enum attr, ref const VertexLayout layout, const(void)* data, uint index=0}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Converts vertex stream data from one vertex stream format to another.
@@ -1899,7 +1974,7 @@ mixin(joinFnBinds((){
 			srcData = Source vertex stream data.
 			num = Number of vertices to convert from source to destination.
 		*/
-		[q{void}, q{vertexConvert}, q{ref const VertexLayout dstLayout, void* dstData, ref const VertexLayout srcLayout, const(void)* srcData, uint num=1}, `C++, "bgfx"`],
+		{q{void}, q{vertexConvert}, q{ref const VertexLayout dstLayout, void* dstData, ref const VertexLayout srcLayout, const(void)* srcData, uint num=1}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Weld vertices.
@@ -1912,7 +1987,7 @@ mixin(joinFnBinds((){
 			index32 = Set to `true` if input indices are 32-bit.
 			epsilon = Error tolerance for vertex position comparison.
 		*/
-		[q{uint}, q{weldVertices}, q{void* output, ref const VertexLayout layout, const(void)* data, uint num, bool index32, float epsilon=0.001f}, `C++, "bgfx"`],
+		{q{uint}, q{weldVertices}, q{void* output, ref const VertexLayout layout, const(void)* data, uint num, bool index32, float epsilon=0.001f}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Convert index buffer for use with different primitive topologies.
@@ -1927,7 +2002,7 @@ mixin(joinFnBinds((){
 			numIndices = Number of input indices.
 			index32 = Set to `true` if input indices are 32-bit.
 		*/
-		[q{uint}, q{topologyConvert}, q{bgfx.fakeenum.TopologyConvert.Enum conversion, void* dst, uint dstSize, const(void)* indices, uint numIndices, bool index32}, `C++, "bgfx"`],
+		{q{uint}, q{topologyConvert}, q{bgfx.impl.TopologyConvert.Enum conversion, void* dst, uint dstSize, const(void)* indices, uint numIndices, bool index32}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Sort indices.
@@ -1947,7 +2022,7 @@ mixin(joinFnBinds((){
 			numIndices = Number of input indices.
 			index32 = Set to `true` if input indices are 32-bit.
 		*/
-		[q{void}, q{topologySortTriList}, q{bgfx.fakeenum.TopologySort.Enum sort, void* dst, uint dstSize, const(float)* dir, const(float)* pos, const(void)* vertices, uint stride, const(void)* indices, uint numIndices, bool index32}, `C++, "bgfx"`],
+		{q{void}, q{topologySortTriList}, q{bgfx.impl.TopologySort.Enum sort, void* dst, uint dstSize, const(float)* dir, const(float)* pos, const(void)* vertices, uint stride, const(void)* indices, uint numIndices, bool index32}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Returns supported backend API renderers.
@@ -1955,26 +2030,26 @@ mixin(joinFnBinds((){
 			max = Maximum number of elements in _enum array.
 			enum_ = Array where supported renderers will be written.
 		*/
-		[q{ubyte}, q{getSupportedRenderers}, q{ubyte max=0, bgfx.fakeenum.RendererType.Enum* enum_=null}, `C++, "bgfx"`],
+		{q{ubyte}, q{getSupportedRenderers}, q{ubyte max=0, bgfx.impl.RendererType.Enum* enum_=null}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Returns name of renderer.
 		Params:
 			type = Renderer backend type. See: `bgfx::RendererType`
 		*/
-		[q{const(char)*}, q{getRendererName}, q{bgfx.fakeenum.RendererType.Enum type}, `C++, "bgfx"`],
+		{q{const(char)*}, q{getRendererName}, q{bgfx.impl.RendererType.Enum type}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Initialize the bgfx library.
 		Params:
 			init = Initialization parameters. See: `bgfx::Init` for more info.
 		*/
-		[q{bool}, q{init}, q{ref const Init init}, `C++, "bgfx"`],
+		{q{bool}, q{init}, q{ref const Init init}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Shutdown bgfx library.
 		*/
-		[q{void}, q{shutdown}, q{}, `C++, "bgfx"`],
+		{q{void}, q{shutdown}, q{}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Reset graphic settings and back-buffer size.
@@ -1997,51 +2072,39 @@ mixin(joinFnBinds((){
 		  - `BGFX_RESET_SRGB_BACKBUFFER` - Enable sRGB back-buffer.
 			format = Texture format. See: `TextureFormat::Enum`.
 		*/
-		[q{void}, q{reset}, q{uint width, uint height, uint flags=Reset.none, bgfx.fakeenum.TextureFormat.Enum format=TextureFormat.count}, `C++, "bgfx"`],
+		{q{void}, q{reset}, q{uint width, uint height, uint flags=Reset.none, bgfx.impl.TextureFormat.Enum format=TextureFormat.count}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Advance to next frame. When using multithreaded renderer, this call
 		* just swaps internal buffers, kicks render thread, and returns. In
 		* singlethreaded renderer this call does frame rendering.
 		Params:
-			capture = Capture frame with graphics debugger.
+			flags = Frame flags. See: `BGFX_FRAME_*` for more info.
+		  - `BGFX_FRAME_NONE` - No frame flag.
+		  - `BGFX_FRAME_DEBUG_CAPTURE` - Capture frame with graphics debugger.
+		  - `BGFX_FRAME_DISCARD` - Discard all draw calls.
 		*/
-		[q{uint}, q{frame}, q{bool capture=false}, `C++, "bgfx"`],
+		{q{uint}, q{frame}, q{ubyte flags=BGFX_FRAME_NONE}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Returns current renderer backend API type.
 		* Remarks:
 		*   Library must be initialized.
 		*/
-		[q{RendererType}, q{getRendererType}, q{}, `C++, "bgfx"`],
+		{q{RendererType}, q{getRendererType}, q{}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Returns renderer capabilities.
 		* Remarks:
 		*   Library must be initialized.
 		*/
-		[q{const(Caps)*}, q{getCaps}, q{}, `C++, "bgfx"`],
+		{q{const(Caps)*}, q{getCaps}, q{}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Returns performance counters.
 		* Attention: Pointer returned is valid until `bgfx::frame` is called.
 		*/
-		[q{const(Stats)*}, q{getStats}, q{}, `C++, "bgfx"`],
-		
-		/**
-		* Allocate buffer to pass to bgfx calls. Data will be freed inside bgfx.
-		Params:
-			size = Size to allocate.
-		*/
-		[q{const(Memory)*}, q{alloc}, q{uint size}, `C++, "bgfx"`],
-		
-		/**
-		* Allocate buffer and copy data into it. Data will be freed inside bgfx.
-		Params:
-			data = Pointer to data to be copied.
-			size = Size of data to be copied.
-		*/
-		[q{const(Memory)*}, q{copy}, q{const(void)* data, uint size}, `C++, "bgfx"`],
+		{q{const(Stats)*}, q{getStats}, q{}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Make reference to data to pass to bgfx. Unlike `bgfx::alloc`, this call
@@ -2057,7 +2120,7 @@ mixin(joinFnBinds((){
 			releaseFn = Callback function to release memory after use.
 			userData = User data to be passed to callback function.
 		*/
-		[q{const(Memory)*}, q{makeRef}, q{const(void)* data, uint size, ReleaseFn releaseFn=null, void* userData=null}, `C++, "bgfx"`],
+		{q{const(Memory)*}, q{makeRef}, q{const(void)* data, uint size, ReleaseFn releaseFn=null, void* userData=null}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Set debug flags.
@@ -2072,7 +2135,7 @@ mixin(joinFnBinds((){
 		  - `BGFX_DEBUG_WIREFRAME` - Wireframe rendering. All rendering
 		    primitives will be rendered as lines.
 		*/
-		[q{void}, q{setDebug}, q{uint debug_}, `C++, "bgfx"`],
+		{q{void}, q{setDebug}, q{uint debug_}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Clear internal debug text buffer.
@@ -2080,7 +2143,7 @@ mixin(joinFnBinds((){
 			attr = Background color.
 			small = Default 8x16 or 8x8 font.
 		*/
-		[q{void}, q{dbgTextClear}, q{ubyte attr=0, bool small=false}, `C++, "bgfx"`],
+		{q{void}, q{dbgTextClear}, q{ubyte attr=0, bool small=false}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Print formatted data to internal debug text character-buffer (VGA-compatible text mode).
@@ -2091,7 +2154,7 @@ mixin(joinFnBinds((){
 		4-bits represent foreground color from standard VGA text palette (ANSI escape codes).
 			format = `printf` style format.
 		*/
-		[q{void}, q{dbgTextPrintf}, q{ushort x, ushort y, ubyte attr, const(char)* format, ...}, `C++, "bgfx"`],
+		{q{void}, q{dbgTextPrintf}, q{ushort x, ushort y, ubyte attr, const(char)* format, ...}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Print formatted data from variable argument list to internal debug text character-buffer (VGA-compatible text mode).
@@ -2103,7 +2166,7 @@ mixin(joinFnBinds((){
 			format = `printf` style format.
 			argList = Variable arguments list for format string.
 		*/
-		[q{void}, q{dbgTextPrintfVargs}, q{ushort x, ushort y, ubyte attr, const(char)* format, va_list argList}, `C++, "bgfx"`],
+		{q{void}, q{dbgTextPrintfVargs}, q{ushort x, ushort y, ubyte attr, const(char)* format, va_list argList}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Draw image into internal debug text buffer.
@@ -2115,7 +2178,7 @@ mixin(joinFnBinds((){
 			data = Raw image data (character/attribute raw encoding).
 			pitch = Image pitch in bytes.
 		*/
-		[q{void}, q{dbgTextImage}, q{ushort x, ushort y, ushort width, ushort height, const(void)* data, ushort pitch}, `C++, "bgfx"`],
+		{q{void}, q{dbgTextImage}, q{ushort x, ushort y, ushort width, ushort height, const(void)* data, ushort pitch}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Create static index buffer.
@@ -2134,7 +2197,7 @@ mixin(joinFnBinds((){
 		  - `BGFX_BUFFER_INDEX32` - Buffer is using 32-bit indices. This flag has effect only on
 		      index buffers.
 		*/
-		[q{IndexBufferHandle}, q{createIndexBuffer}, q{const(Memory)* mem, ushort flags=Buffer.none}, `C++, "bgfx"`],
+		{q{IndexBufferHandle}, q{createIndexBuffer}, q{const(Memory)* mem, ushort flags=Buffer.none}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Set static index buffer debug name.
@@ -2144,28 +2207,28 @@ mixin(joinFnBinds((){
 			len = Static index buffer name length (if length is INT32_MAX, it's expected
 		that _name is zero terminated string.
 		*/
-		[q{void}, q{setName}, q{IndexBufferHandle handle, const(char)* name, int len=int.max}, `C++, "bgfx"`],
+		{q{void}, q{setName}, q{IndexBufferHandle handle, const(char)* name, int len=int.max}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Destroy static index buffer.
 		Params:
 			handle = Static index buffer handle.
 		*/
-		[q{void}, q{destroy}, q{IndexBufferHandle handle}, `C++, "bgfx"`],
+		{q{void}, q{destroy}, q{IndexBufferHandle handle}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Create vertex layout.
 		Params:
 			layout = Vertex layout.
 		*/
-		[q{VertexLayoutHandle}, q{createVertexLayout}, q{ref const VertexLayout layout}, `C++, "bgfx"`],
+		{q{VertexLayoutHandle}, q{createVertexLayout}, q{ref const VertexLayout layout}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Destroy vertex layout.
 		Params:
 			layoutHandle = Vertex layout handle.
 		*/
-		[q{void}, q{destroy}, q{VertexLayoutHandle layoutHandle}, `C++, "bgfx"`],
+		{q{void}, q{destroy}, q{VertexLayoutHandle layoutHandle}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Create static vertex buffer.
@@ -2183,7 +2246,7 @@ mixin(joinFnBinds((){
 		     will be trimmed to fit the existing buffer size. This flag has effect only on dynamic buffers.
 		 - `BGFX_BUFFER_INDEX32` - Buffer is using 32-bit indices. This flag has effect only on index buffers.
 		*/
-		[q{VertexBufferHandle}, q{createVertexBuffer}, q{const(Memory)* mem, ref const VertexLayout layout, ushort flags=Buffer.none}, `C++, "bgfx"`],
+		{q{VertexBufferHandle}, q{createVertexBuffer}, q{const(Memory)* mem, ref const VertexLayout layout, ushort flags=Buffer.none}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Set static vertex buffer debug name.
@@ -2193,14 +2256,14 @@ mixin(joinFnBinds((){
 			len = Static vertex buffer name length (if length is INT32_MAX, it's expected
 		that _name is zero terminated string.
 		*/
-		[q{void}, q{setName}, q{VertexBufferHandle handle, const(char)* name, int len=int.max}, `C++, "bgfx"`],
+		{q{void}, q{setName}, q{VertexBufferHandle handle, const(char)* name, int len=int.max}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Destroy static vertex buffer.
 		Params:
 			handle = Static vertex buffer handle.
 		*/
-		[q{void}, q{destroy}, q{VertexBufferHandle handle}, `C++, "bgfx"`],
+		{q{void}, q{destroy}, q{VertexBufferHandle handle}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Create empty dynamic index buffer.
@@ -2219,7 +2282,7 @@ mixin(joinFnBinds((){
 		  - `BGFX_BUFFER_INDEX32` - Buffer is using 32-bit indices. This flag has effect only on
 		      index buffers.
 		*/
-		[q{DynamicIndexBufferHandle}, q{createDynamicIndexBuffer}, q{uint num, ushort flags=Buffer.none}, `C++, "bgfx"`],
+		{q{DynamicIndexBufferHandle}, q{createDynamicIndexBuffer}, q{uint num, ushort flags=Buffer.none}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Create a dynamic index buffer and initialize it.
@@ -2238,7 +2301,7 @@ mixin(joinFnBinds((){
 		  - `BGFX_BUFFER_INDEX32` - Buffer is using 32-bit indices. This flag has effect only on
 		      index buffers.
 		*/
-		[q{DynamicIndexBufferHandle}, q{createDynamicIndexBuffer}, q{const(Memory)* mem, ushort flags=Buffer.none}, `C++, "bgfx"`],
+		{q{DynamicIndexBufferHandle}, q{createDynamicIndexBuffer}, q{const(Memory)* mem, ushort flags=Buffer.none}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Update dynamic index buffer.
@@ -2247,14 +2310,14 @@ mixin(joinFnBinds((){
 			startIndex = Start index.
 			mem = Index buffer data.
 		*/
-		[q{void}, q{update}, q{DynamicIndexBufferHandle handle, uint startIndex, const(Memory)* mem}, `C++, "bgfx"`],
+		{q{void}, q{update}, q{DynamicIndexBufferHandle handle, uint startIndex, const(Memory)* mem}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Destroy dynamic index buffer.
 		Params:
 			handle = Dynamic index buffer handle.
 		*/
-		[q{void}, q{destroy}, q{DynamicIndexBufferHandle handle}, `C++, "bgfx"`],
+		{q{void}, q{destroy}, q{DynamicIndexBufferHandle handle}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Create empty dynamic vertex buffer.
@@ -2274,7 +2337,7 @@ mixin(joinFnBinds((){
 		  - `BGFX_BUFFER_INDEX32` - Buffer is using 32-bit indices. This flag has effect only on
 		      index buffers.
 		*/
-		[q{DynamicVertexBufferHandle}, q{createDynamicVertexBuffer}, q{uint num, ref const VertexLayout layout, ushort flags=Buffer.none}, `C++, "bgfx"`],
+		{q{DynamicVertexBufferHandle}, q{createDynamicVertexBuffer}, q{uint num, ref const VertexLayout layout, ushort flags=Buffer.none}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Create dynamic vertex buffer and initialize it.
@@ -2294,7 +2357,7 @@ mixin(joinFnBinds((){
 		  - `BGFX_BUFFER_INDEX32` - Buffer is using 32-bit indices. This flag has effect only on
 		      index buffers.
 		*/
-		[q{DynamicVertexBufferHandle}, q{createDynamicVertexBuffer}, q{const(Memory)* mem, ref const VertexLayout layout, ushort flags=Buffer.none}, `C++, "bgfx"`],
+		{q{DynamicVertexBufferHandle}, q{createDynamicVertexBuffer}, q{const(Memory)* mem, ref const VertexLayout layout, ushort flags=Buffer.none}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Update dynamic vertex buffer.
@@ -2303,14 +2366,14 @@ mixin(joinFnBinds((){
 			startVertex = Start vertex.
 			mem = Vertex buffer data.
 		*/
-		[q{void}, q{update}, q{DynamicVertexBufferHandle handle, uint startVertex, const(Memory)* mem}, `C++, "bgfx"`],
+		{q{void}, q{update}, q{DynamicVertexBufferHandle handle, uint startVertex, const(Memory)* mem}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Destroy dynamic vertex buffer.
 		Params:
 			handle = Dynamic vertex buffer handle.
 		*/
-		[q{void}, q{destroy}, q{DynamicVertexBufferHandle handle}, `C++, "bgfx"`],
+		{q{void}, q{destroy}, q{DynamicVertexBufferHandle handle}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Returns number of requested or maximum available indices.
@@ -2318,7 +2381,7 @@ mixin(joinFnBinds((){
 			num = Number of required indices.
 			index32 = Set to `true` if input indices will be 32-bit.
 		*/
-		[q{uint}, q{getAvailTransientIndexBuffer}, q{uint num, bool index32=false}, `C++, "bgfx"`],
+		{q{uint}, q{getAvailTransientIndexBuffer}, q{uint num, bool index32=false}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Returns number of requested or maximum available vertices.
@@ -2326,7 +2389,7 @@ mixin(joinFnBinds((){
 			num = Number of required vertices.
 			layout = Vertex layout.
 		*/
-		[q{uint}, q{getAvailTransientVertexBuffer}, q{uint num, ref const VertexLayout layout}, `C++, "bgfx"`],
+		{q{uint}, q{getAvailTransientVertexBuffer}, q{uint num, ref const VertexLayout layout}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Returns number of requested or maximum available instance buffer slots.
@@ -2334,7 +2397,7 @@ mixin(joinFnBinds((){
 			num = Number of required instances.
 			stride = Stride per instance.
 		*/
-		[q{uint}, q{getAvailInstanceDataBuffer}, q{uint num, ushort stride}, `C++, "bgfx"`],
+		{q{uint}, q{getAvailInstanceDataBuffer}, q{uint num, ushort stride}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Allocate transient index buffer.
@@ -2345,7 +2408,7 @@ mixin(joinFnBinds((){
 			num = Number of indices to allocate.
 			index32 = Set to `true` if input indices will be 32-bit.
 		*/
-		[q{void}, q{allocTransientIndexBuffer}, q{TransientIndexBuffer* tib, uint num, bool index32=false}, `C++, "bgfx"`],
+		{q{void}, q{allocTransientIndexBuffer}, q{TransientIndexBuffer* tib, uint num, bool index32=false}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Allocate transient vertex buffer.
@@ -2356,7 +2419,7 @@ mixin(joinFnBinds((){
 			num = Number of vertices to allocate.
 			layout = Vertex layout.
 		*/
-		[q{void}, q{allocTransientVertexBuffer}, q{TransientVertexBuffer* tvb, uint num, ref const VertexLayout layout}, `C++, "bgfx"`],
+		{q{void}, q{allocTransientVertexBuffer}, q{TransientVertexBuffer* tvb, uint num, ref const VertexLayout layout}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Check for required space and allocate transient vertex and index
@@ -2374,7 +2437,7 @@ mixin(joinFnBinds((){
 			numIndices = Number of indices to allocate.
 			index32 = Set to `true` if input indices will be 32-bit.
 		*/
-		[q{bool}, q{allocTransientBuffers}, q{TransientVertexBuffer* tvb, ref const VertexLayout layout, uint numVertices, TransientIndexBuffer* tib, uint numIndices, bool index32=false}, `C++, "bgfx"`],
+		{q{bool}, q{allocTransientBuffers}, q{TransientVertexBuffer* tvb, ref const VertexLayout layout, uint numVertices, TransientIndexBuffer* tib, uint numIndices, bool index32=false}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Allocate instance data buffer.
@@ -2385,28 +2448,30 @@ mixin(joinFnBinds((){
 			num = Number of instances.
 			stride = Instance stride. Must be multiple of 16.
 		*/
-		[q{void}, q{allocInstanceDataBuffer}, q{InstanceDataBuffer* idb, uint num, ushort stride}, `C++, "bgfx"`],
+		{q{void}, q{allocInstanceDataBuffer}, q{InstanceDataBuffer* idb, uint num, ushort stride}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Create draw indirect buffer.
 		Params:
 			num = Number of indirect calls.
 		*/
-		[q{IndirectBufferHandle}, q{createIndirectBuffer}, q{uint num}, `C++, "bgfx"`],
+		{q{IndirectBufferHandle}, q{createIndirectBuffer}, q{uint num}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Destroy draw indirect buffer.
 		Params:
 			handle = Indirect buffer handle.
 		*/
-		[q{void}, q{destroy}, q{IndirectBufferHandle handle}, `C++, "bgfx"`],
+		{q{void}, q{destroy}, q{IndirectBufferHandle handle}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Create shader from memory buffer.
+		* Remarks:
+		*   Shader binary is obtained by compiling shader offline with shaderc command line tool.
 		Params:
 			mem = Shader binary.
 		*/
-		[q{ShaderHandle}, q{createShader}, q{const(Memory)* mem}, `C++, "bgfx"`],
+		{q{ShaderHandle}, q{createShader}, q{const(Memory)* mem}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Returns the number of uniforms and uniform handles used inside a shader.
@@ -2417,7 +2482,7 @@ mixin(joinFnBinds((){
 			uniforms = UniformHandle array where data will be stored.
 			max = Maximum capacity of array.
 		*/
-		[q{ushort}, q{getShaderUniforms}, q{ShaderHandle handle, UniformHandle* uniforms=null, ushort max=0}, `C++, "bgfx"`],
+		{q{ushort}, q{getShaderUniforms}, q{ShaderHandle handle, UniformHandle* uniforms=null, ushort max=0}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Set shader debug name.
@@ -2427,7 +2492,7 @@ mixin(joinFnBinds((){
 			len = Shader name length (if length is INT32_MAX, it's expected
 		that _name is zero terminated string).
 		*/
-		[q{void}, q{setName}, q{ShaderHandle handle, const(char)* name, int len=int.max}, `C++, "bgfx"`],
+		{q{void}, q{setName}, q{ShaderHandle handle, const(char)* name, int len=int.max}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Destroy shader.
@@ -2436,7 +2501,7 @@ mixin(joinFnBinds((){
 		Params:
 			handle = Shader handle.
 		*/
-		[q{void}, q{destroy}, q{ShaderHandle handle}, `C++, "bgfx"`],
+		{q{void}, q{destroy}, q{ShaderHandle handle}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Create program with vertex and fragment shaders.
@@ -2445,7 +2510,7 @@ mixin(joinFnBinds((){
 			fsh = Fragment shader.
 			destroyShaders = If true, shaders will be destroyed when program is destroyed.
 		*/
-		[q{ProgramHandle}, q{createProgram}, q{ShaderHandle vsh, ShaderHandle fsh, bool destroyShaders=false}, `C++, "bgfx"`],
+		{q{ProgramHandle}, q{createProgram}, q{ShaderHandle vsh, ShaderHandle fsh, bool destroyShaders=false}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Create program with compute shader.
@@ -2453,14 +2518,14 @@ mixin(joinFnBinds((){
 			csh = Compute shader.
 			destroyShaders = If true, shaders will be destroyed when program is destroyed.
 		*/
-		[q{ProgramHandle}, q{createProgram}, q{ShaderHandle csh, bool destroyShaders=false}, `C++, "bgfx"`],
+		{q{ProgramHandle}, q{createProgram}, q{ShaderHandle csh, bool destroyShaders=false}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Destroy program.
 		Params:
 			handle = Program handle.
 		*/
-		[q{void}, q{destroy}, q{ProgramHandle handle}, `C++, "bgfx"`],
+		{q{void}, q{destroy}, q{ProgramHandle handle}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Validate texture parameters.
@@ -2471,7 +2536,7 @@ mixin(joinFnBinds((){
 			format = Texture format. See: `TextureFormat::Enum`.
 			flags = Texture flags. See `BGFX_TEXTURE_*`.
 		*/
-		[q{bool}, q{isTextureValid}, q{ushort depth, bool cubeMap, ushort numLayers, bgfx.fakeenum.TextureFormat.Enum format, ulong flags}, `C++, "bgfx"`],
+		{q{bool}, q{isTextureValid}, q{ushort depth, bool cubeMap, ushort numLayers, bgfx.impl.TextureFormat.Enum format, c_uint64 flags}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Validate frame buffer parameters.
@@ -2479,7 +2544,7 @@ mixin(joinFnBinds((){
 			num = Number of attachments.
 			attachment = Attachment texture info. See: `bgfx::Attachment`.
 		*/
-		[q{bool}, q{isFrameBufferValid}, q{ubyte num, const(Attachment)* attachment}, `C++, "bgfx"`],
+		{q{bool}, q{isFrameBufferValid}, q{ubyte num, const(Attachment)* attachment}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Calculate amount of memory required for texture.
@@ -2493,7 +2558,7 @@ mixin(joinFnBinds((){
 			numLayers = Number of layers in texture array.
 			format = Texture format. See: `TextureFormat::Enum`.
 		*/
-		[q{void}, q{calcTextureSize}, q{ref TextureInfo info, ushort width, ushort height, ushort depth, bool cubeMap, bool hasMIPs, ushort numLayers, bgfx.fakeenum.TextureFormat.Enum format}, `C++, "bgfx"`],
+		{q{void}, q{calcTextureSize}, q{ref TextureInfo info, ushort width, ushort height, ushort depth, bool cubeMap, bool hasMIPs, ushort numLayers, bgfx.impl.TextureFormat.Enum format}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Create texture from memory buffer.
@@ -2508,7 +2573,7 @@ mixin(joinFnBinds((){
 			skip = Skip top level mips when parsing texture.
 			info = When non-`NULL` is specified it returns parsed texture information.
 		*/
-		[q{TextureHandle}, q{createTexture}, q{const(Memory)* mem, ulong flags, ubyte skip=0, TextureInfo* info=null}, `C++, "bgfx"`],
+		{q{TextureHandle}, q{createTexture}, q{const(Memory)* mem, c_uint64 flags=Texture.none|Sampler.none, ubyte skip=0, TextureInfo* info=null}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Create 2D texture.
@@ -2528,8 +2593,9 @@ mixin(joinFnBinds((){
 			mem = Texture data. If `_mem` is non-NULL, created texture will be immutable. If
 		`_mem` is NULL content of the texture is uninitialized. When `_numLayers` is more than
 		1, expected memory layout is texture and all mips together for each array element.
+			external = Native API pointer to texture.
 		*/
-		[q{TextureHandle}, q{createTexture2D}, q{ushort width, ushort height, bool hasMIPs, ushort numLayers, bgfx.fakeenum.TextureFormat.Enum format, ulong flags, const(Memory)* mem=null}, `C++, "bgfx"`],
+		{q{TextureHandle}, q{createTexture2D}, q{ushort width, ushort height, bool hasMIPs, ushort numLayers, bgfx.impl.TextureFormat.Enum format, c_uint64 flags=Texture.none|Sampler.none, const(Memory)* mem=null, c_uint64 external=0}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Create texture with size based on back-buffer ratio. Texture will maintain ratio
@@ -2547,7 +2613,7 @@ mixin(joinFnBinds((){
 		- `BGFX_SAMPLER_[MIN/MAG/MIP]_[POINT/ANISOTROPIC]` - Point or anisotropic
 		  sampling.
 		*/
-		[q{TextureHandle}, q{createTexture2D}, q{bgfx.fakeenum.BackbufferRatio.Enum ratio, bool hasMIPs, ushort numLayers, bgfx.fakeenum.TextureFormat.Enum format, ulong flags=Texture.none|Sampler.none}, `C++, "bgfx"`],
+		{q{TextureHandle}, q{createTexture2D}, q{bgfx.impl.BackbufferRatio.Enum ratio, bool hasMIPs, ushort numLayers, bgfx.impl.TextureFormat.Enum format, c_uint64 flags=Texture.none|Sampler.none}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Create 3D texture.
@@ -2566,8 +2632,9 @@ mixin(joinFnBinds((){
 			mem = Texture data. If `_mem` is non-NULL, created texture will be immutable. If
 		`_mem` is NULL content of the texture is uninitialized. When `_numLayers` is more than
 		1, expected memory layout is texture and all mips together for each array element.
+			external = Native API pointer to texture.
 		*/
-		[q{TextureHandle}, q{createTexture3D}, q{ushort width, ushort height, ushort depth, bool hasMIPs, bgfx.fakeenum.TextureFormat.Enum format, ulong flags=Texture.none|Sampler.none, const(Memory)* mem=null}, `C++, "bgfx"`],
+		{q{TextureHandle}, q{createTexture3D}, q{ushort width, ushort height, ushort depth, bool hasMIPs, bgfx.impl.TextureFormat.Enum format, c_uint64 flags=Texture.none|Sampler.none, const(Memory)* mem=null, c_uint64 external=0}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Create Cube texture.
@@ -2585,9 +2652,9 @@ mixin(joinFnBinds((){
 		  sampling.
 			mem = Texture data. If `_mem` is non-NULL, created texture will be immutable. If
 		`_mem` is NULL content of the texture is uninitialized. When `_numLayers` is more than
-		1, expected memory layout is texture and all mips together for each array element.
+			external = Native API pointer to texture.
 		*/
-		[q{TextureHandle}, q{createTextureCube}, q{ushort size, bool hasMIPs, ushort numLayers, bgfx.fakeenum.TextureFormat.Enum format, ulong flags=Texture.none|Sampler.none, const(Memory)* mem=null}, `C++, "bgfx"`],
+		{q{TextureHandle}, q{createTextureCube}, q{ushort size, bool hasMIPs, ushort numLayers, bgfx.impl.TextureFormat.Enum format, c_uint64 flags=Texture.none|Sampler.none, const(Memory)* mem=null, c_uint64 external=0}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Update 2D texture.
@@ -2604,7 +2671,7 @@ mixin(joinFnBinds((){
 			pitch = Pitch of input image (bytes). When _pitch is set to
 		UINT16_MAX, it will be calculated internally based on _width.
 		*/
-		[q{void}, q{updateTexture2D}, q{TextureHandle handle, ushort layer, ubyte mip, ushort x, ushort y, ushort width, ushort height, const(Memory)* mem, ushort pitch=ushort.max}, `C++, "bgfx"`],
+		{q{void}, q{updateTexture2D}, q{TextureHandle handle, ushort layer, ubyte mip, ushort x, ushort y, ushort width, ushort height, const(Memory)* mem, ushort pitch=ushort.max}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Update 3D texture.
@@ -2620,7 +2687,7 @@ mixin(joinFnBinds((){
 			depth = Depth of texture block.
 			mem = Texture update data.
 		*/
-		[q{void}, q{updateTexture3D}, q{TextureHandle handle, ubyte mip, ushort x, ushort y, ushort z, ushort width, ushort height, ushort depth, const(Memory)* mem}, `C++, "bgfx"`],
+		{q{void}, q{updateTexture3D}, q{TextureHandle handle, ubyte mip, ushort x, ushort y, ushort z, ushort width, ushort height, ushort depth, const(Memory)* mem}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Update Cube texture.
@@ -2655,7 +2722,7 @@ mixin(joinFnBinds((){
 			pitch = Pitch of input image (bytes). When _pitch is set to
 		UINT16_MAX, it will be calculated internally based on _width.
 		*/
-		[q{void}, q{updateTextureCube}, q{TextureHandle handle, ushort layer, ubyte side, ubyte mip, ushort x, ushort y, ushort width, ushort height, const(Memory)* mem, ushort pitch=ushort.max}, `C++, "bgfx"`],
+		{q{void}, q{updateTextureCube}, q{TextureHandle handle, ushort layer, ubyte side, ubyte mip, ushort x, ushort y, ushort width, ushort height, const(Memory)* mem, ushort pitch=ushort.max}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Read back texture content.
@@ -2666,7 +2733,7 @@ mixin(joinFnBinds((){
 			data = Destination buffer.
 			mip = Mip level.
 		*/
-		[q{uint}, q{readTexture}, q{TextureHandle handle, void* data, ubyte mip=0}, `C++, "bgfx"`],
+		{q{uint}, q{readTexture}, q{TextureHandle handle, void* data, ubyte mip=0}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Set texture debug name.
@@ -2676,7 +2743,7 @@ mixin(joinFnBinds((){
 			len = Texture name length (if length is INT32_MAX, it's expected
 		that _name is zero terminated string.
 		*/
-		[q{void}, q{setName}, q{TextureHandle handle, const(char)* name, int len=int.max}, `C++, "bgfx"`],
+		{q{void}, q{setName}, q{TextureHandle handle, const(char)* name, int len=int.max}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Returns texture direct access pointer.
@@ -2685,14 +2752,14 @@ mixin(joinFnBinds((){
 		Params:
 			handle = Texture handle.
 		*/
-		[q{void*}, q{getDirectAccessPtr}, q{TextureHandle handle}, `C++, "bgfx"`],
+		{q{void*}, q{getDirectAccessPtr}, q{TextureHandle handle}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Destroy texture.
 		Params:
 			handle = Texture handle.
 		*/
-		[q{void}, q{destroy}, q{TextureHandle handle}, `C++, "bgfx"`],
+		{q{void}, q{destroy}, q{TextureHandle handle}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Create frame buffer (simple).
@@ -2707,7 +2774,7 @@ mixin(joinFnBinds((){
 		- `BGFX_SAMPLER_[MIN/MAG/MIP]_[POINT/ANISOTROPIC]` - Point or anisotropic
 		  sampling.
 		*/
-		[q{FrameBufferHandle}, q{createFrameBuffer}, q{ushort width, ushort height, bgfx.fakeenum.TextureFormat.Enum format, ulong textureFlags=SamplerU.clamp|SamplerV.clamp}, `C++, "bgfx"`],
+		{q{FrameBufferHandle}, q{createFrameBuffer}, q{ushort width, ushort height, bgfx.impl.TextureFormat.Enum format, c_uint64 textureFlags=SamplerU.clamp|SamplerV.clamp}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Create frame buffer with size based on back-buffer ratio. Frame buffer will maintain ratio
@@ -2723,7 +2790,7 @@ mixin(joinFnBinds((){
 		- `BGFX_SAMPLER_[MIN/MAG/MIP]_[POINT/ANISOTROPIC]` - Point or anisotropic
 		  sampling.
 		*/
-		[q{FrameBufferHandle}, q{createFrameBuffer}, q{bgfx.fakeenum.BackbufferRatio.Enum ratio, bgfx.fakeenum.TextureFormat.Enum format, ulong textureFlags=SamplerU.clamp|SamplerV.clamp}, `C++, "bgfx"`],
+		{q{FrameBufferHandle}, q{createFrameBuffer}, q{bgfx.impl.BackbufferRatio.Enum ratio, bgfx.impl.TextureFormat.Enum format, c_uint64 textureFlags=SamplerU.clamp|SamplerV.clamp}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Create MRT frame buffer from texture handles (simple).
@@ -2733,7 +2800,7 @@ mixin(joinFnBinds((){
 			destroyTexture = If true, textures will be destroyed when
 		frame buffer is destroyed.
 		*/
-		[q{FrameBufferHandle}, q{createFrameBuffer}, q{ubyte num, const(TextureHandle)* handles, bool destroyTexture=false}, `C++, "bgfx"`],
+		{q{FrameBufferHandle}, q{createFrameBuffer}, q{ubyte num, const(TextureHandle)* handles, bool destroyTexture=false}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Create MRT frame buffer from texture handles with specific layer and
@@ -2744,7 +2811,7 @@ mixin(joinFnBinds((){
 			destroyTexture = If true, textures will be destroyed when
 		frame buffer is destroyed.
 		*/
-		[q{FrameBufferHandle}, q{createFrameBuffer}, q{ubyte num, const(Attachment)* attachment, bool destroyTexture=false}, `C++, "bgfx"`],
+		{q{FrameBufferHandle}, q{createFrameBuffer}, q{ubyte num, const(Attachment)* attachment, bool destroyTexture=false}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Create frame buffer for multiple window rendering.
@@ -2758,7 +2825,7 @@ mixin(joinFnBinds((){
 			format = Window back buffer color format.
 			depthFormat = Window back buffer depth format.
 		*/
-		[q{FrameBufferHandle}, q{createFrameBuffer}, q{void* nwh, ushort width, ushort height, bgfx.fakeenum.TextureFormat.Enum format=TextureFormat.count, bgfx.fakeenum.TextureFormat.Enum depthFormat=TextureFormat.count}, `C++, "bgfx"`],
+		{q{FrameBufferHandle}, q{createFrameBuffer}, q{void* nwh, ushort width, ushort height, bgfx.impl.TextureFormat.Enum format=TextureFormat.count, bgfx.impl.TextureFormat.Enum depthFormat=TextureFormat.count}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Set frame buffer debug name.
@@ -2768,21 +2835,21 @@ mixin(joinFnBinds((){
 			len = Frame buffer name length (if length is INT32_MAX, it's expected
 		that _name is zero terminated string.
 		*/
-		[q{void}, q{setName}, q{FrameBufferHandle handle, const(char)* name, int len=int.max}, `C++, "bgfx"`],
+		{q{void}, q{setName}, q{FrameBufferHandle handle, const(char)* name, int len=int.max}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Obtain texture handle of frame buffer attachment.
 		Params:
 			handle = Frame buffer handle.
 		*/
-		[q{TextureHandle}, q{getTexture}, q{FrameBufferHandle handle, ubyte attachment=0}, `C++, "bgfx"`],
+		{q{TextureHandle}, q{getTexture}, q{FrameBufferHandle handle, ubyte attachment=0}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Destroy frame buffer.
 		Params:
 			handle = Frame buffer handle.
 		*/
-		[q{void}, q{destroy}, q{FrameBufferHandle handle}, `C++, "bgfx"`],
+		{q{void}, q{destroy}, q{FrameBufferHandle handle}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Create shader uniform parameter.
@@ -2806,6 +2873,7 @@ mixin(joinFnBinds((){
 		*      - `u_model mat4[BGFX_CONFIG_MAX_BONES]` - array of model matrices.
 		*      - `u_modelView mat4` - concatenated model view matrix, only first
 		*        model matrix from array is used.
+		*      - `u_invModelView mat4` - inverted concatenated model view matrix.
 		*      - `u_modelViewProj mat4` - concatenated model view projection matrix.
 		*      - `u_alphaRef float` - alpha reference value for alpha test.
 		Params:
@@ -2813,7 +2881,40 @@ mixin(joinFnBinds((){
 			type = Type of uniform (See: `bgfx::UniformType`).
 			num = Number of elements in array.
 		*/
-		[q{UniformHandle}, q{createUniform}, q{const(char)* name, bgfx.fakeenum.UniformType.Enum type, ushort num=1}, `C++, "bgfx"`],
+		{q{UniformHandle}, q{createUniform}, q{const(char)* name, bgfx.impl.UniformType.Enum type, ushort num=1}, ext: `C++, "bgfx"`},
+		
+		/**
+		* Create shader uniform parameter.
+		* Remarks:
+		*   1. Uniform names are unique. It's valid to call `bgfx::createUniform`
+		*      multiple times with the same uniform name. The library will always
+		*      return the same handle, but the handle reference count will be
+		*      incremented. This means that the same number of `bgfx::destroyUniform`
+		*      must be called to properly destroy the uniform.
+		*   2. Predefined uniforms (declared in `bgfx_shader.sh`):
+		*      - `u_viewRect vec4(x, y, width, height)` - view rectangle for current
+		*        view, in pixels.
+		*      - `u_viewTexel vec4(1.0/width, 1.0/height, undef, undef)` - inverse
+		*        width and height
+		*      - `u_view mat4` - view matrix
+		*      - `u_invView mat4` - inverted view matrix
+		*      - `u_proj mat4` - projection matrix
+		*      - `u_invProj mat4` - inverted projection matrix
+		*      - `u_viewProj mat4` - concatenated view projection matrix
+		*      - `u_invViewProj mat4` - concatenated inverted view projection matrix
+		*      - `u_model mat4[BGFX_CONFIG_MAX_BONES]` - array of model matrices.
+		*      - `u_modelView mat4` - concatenated model view matrix, only first
+		*        model matrix from array is used.
+		*      - `u_invModelView mat4` - inverted concatenated model view matrix.
+		*      - `u_modelViewProj mat4` - concatenated model view projection matrix.
+		*      - `u_alphaRef float` - alpha reference value for alpha test.
+		Params:
+			name = Uniform name in shader.
+			freq = Uniform change frequency (See: `bgfx::UniformFreq`).
+			type = Type of uniform (See: `bgfx::UniformType`).
+			num = Number of elements in array.
+		*/
+		{q{UniformHandle}, q{createUniform}, q{const(char)* name, bgfx.impl.UniformFreq.Enum freq, bgfx.impl.UniformType.Enum type, ushort num=1}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Retrieve uniform info.
@@ -2821,19 +2922,19 @@ mixin(joinFnBinds((){
 			handle = Handle to uniform object.
 			info = Uniform info.
 		*/
-		[q{void}, q{getUniformInfo}, q{UniformHandle handle, ref UniformInfo info}, `C++, "bgfx"`],
+		{q{void}, q{getUniformInfo}, q{UniformHandle handle, ref UniformInfo info}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Destroy shader uniform parameter.
 		Params:
 			handle = Handle to uniform object.
 		*/
-		[q{void}, q{destroy}, q{UniformHandle handle}, `C++, "bgfx"`],
+		{q{void}, q{destroy}, q{UniformHandle handle}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Create occlusion query.
 		*/
-		[q{OcclusionQueryHandle}, q{createOcclusionQuery}, q{}, `C++, "bgfx"`],
+		{q{OcclusionQueryHandle}, q{createOcclusionQuery}, q{}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Retrieve occlusion query result from previous frame.
@@ -2842,14 +2943,14 @@ mixin(joinFnBinds((){
 			result = Number of pixels that passed test. This argument
 		can be `NULL` if result of occlusion query is not needed.
 		*/
-		[q{OcclusionQueryResult}, q{getResult}, q{OcclusionQueryHandle handle, int* result=null}, `C++, "bgfx"`],
+		{q{OcclusionQueryResult}, q{getResult}, q{OcclusionQueryHandle handle, int* result=null}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Destroy occlusion query.
 		Params:
 			handle = Handle to occlusion query object.
 		*/
-		[q{void}, q{destroy}, q{OcclusionQueryHandle handle}, `C++, "bgfx"`],
+		{q{void}, q{destroy}, q{OcclusionQueryHandle handle}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Set palette color value.
@@ -2857,7 +2958,18 @@ mixin(joinFnBinds((){
 			index = Index into palette.
 			rgba = RGBA floating point values.
 		*/
-		[q{void}, q{setPaletteColor}, q{ubyte index, const(float)* rgba}, `C++, "bgfx"`],
+		{q{void}, q{setPaletteColor}, q{ubyte index, const(float)* rgba}, ext: `C++, "bgfx"`},
+		
+		/**
+		* Set palette color value.
+		Params:
+			index = Index into palette.
+			r = Red value (RGBA floating point values)
+			g = Green value (RGBA floating point values)
+			b = Blue value (RGBA floating point values)
+			a = Alpha value (RGBA floating point values)
+		*/
+		{q{void}, q{setPaletteColor}, q{ubyte index, float r, float g, float b, float a}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Set palette color value.
@@ -2865,7 +2977,7 @@ mixin(joinFnBinds((){
 			index = Index into palette.
 			rgba = Packed 32-bit RGBA value.
 		*/
-		[q{void}, q{setPaletteColor}, q{ubyte index, uint rgba}, `C++, "bgfx"`],
+		{q{void}, q{setPaletteColor}, q{ubyte index, uint rgba}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Set view name.
@@ -2879,8 +2991,10 @@ mixin(joinFnBinds((){
 		Params:
 			id = View id.
 			name = View name.
+			len = View name length (if length is INT32_MAX, it's expected
+		that _name is zero terminated string.
 		*/
-		[q{void}, q{setViewName}, q{ViewID id, const(char)* name}, `C++, "bgfx"`],
+		{q{void}, q{setViewName}, q{ViewID id, const(char)* name, int len=int.max}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Set view rectangle. Draw primitive outside view will be clipped.
@@ -2891,7 +3005,7 @@ mixin(joinFnBinds((){
 			width = Width of view port region.
 			height = Height of view port region.
 		*/
-		[q{void}, q{setViewRect}, q{ViewID id, ushort x, ushort y, ushort width, ushort height}, `C++, "bgfx"`],
+		{q{void}, q{setViewRect}, q{ViewID id, ushort x, ushort y, ushort width, ushort height}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Set view rectangle. Draw primitive outside view will be clipped.
@@ -2902,7 +3016,7 @@ mixin(joinFnBinds((){
 			ratio = Width and height will be set in respect to back-buffer size.
 		See: `BackbufferRatio::Enum`.
 		*/
-		[q{void}, q{setViewRect}, q{ViewID id, ushort x, ushort y, bgfx.fakeenum.BackbufferRatio.Enum ratio}, `C++, "bgfx"`],
+		{q{void}, q{setViewRect}, q{ViewID id, ushort x, ushort y, bgfx.impl.BackbufferRatio.Enum ratio}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Set view scissor. Draw primitive outside view will be clipped. When
@@ -2914,7 +3028,7 @@ mixin(joinFnBinds((){
 			width = Width of view scissor region.
 			height = Height of view scissor region.
 		*/
-		[q{void}, q{setViewScissor}, q{ViewID id, ushort x=0, ushort y=0, ushort width=0, ushort height=0}, `C++, "bgfx"`],
+		{q{void}, q{setViewScissor}, q{ViewID id, ushort x=0, ushort y=0, ushort width=0, ushort height=0}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Set view clear flags.
@@ -2926,7 +3040,7 @@ mixin(joinFnBinds((){
 			depth = Depth clear value.
 			stencil = Stencil clear value.
 		*/
-		[q{void}, q{setViewClear}, q{ViewID id, ushort flags, uint rgba=0x000000ff, float depth=1.0f, ubyte stencil=0}, `C++, "bgfx"`],
+		{q{void}, q{setViewClear}, q{ViewID id, ushort flags, uint rgba=0x000000ff, float depth=1.0f, ubyte stencil=0}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Set view clear flags with different clear color for each
@@ -2947,7 +3061,7 @@ mixin(joinFnBinds((){
 			c6 = Palette index for frame buffer attachment 6.
 			c7 = Palette index for frame buffer attachment 7.
 		*/
-		[q{void}, q{setViewClear}, q{ViewID id, ushort flags, float depth, ubyte stencil, ubyte c0=ubyte.max, ubyte c1=ubyte.max, ubyte c2=ubyte.max, ubyte c3=ubyte.max, ubyte c4=ubyte.max, ubyte c5=ubyte.max, ubyte c6=ubyte.max, ubyte c7=ubyte.max}, `C++, "bgfx"`],
+		{q{void}, q{setViewClear}, q{ViewID id, ushort flags, float depth, ubyte stencil, ubyte c0=ubyte.max, ubyte c1=ubyte.max, ubyte c2=ubyte.max, ubyte c3=ubyte.max, ubyte c4=ubyte.max, ubyte c5=ubyte.max, ubyte c6=ubyte.max, ubyte c7=ubyte.max}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Set view sorting mode.
@@ -2957,7 +3071,7 @@ mixin(joinFnBinds((){
 			id = View id.
 			mode = View sort mode. See `ViewMode::Enum`.
 		*/
-		[q{void}, q{setViewMode}, q{ViewID id, bgfx.fakeenum.ViewMode.Enum mode=ViewMode.default_}, `C++, "bgfx"`],
+		{q{void}, q{setViewMode}, q{ViewID id, bgfx.impl.ViewMode.Enum mode=ViewMode.default_}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Set view frame buffer.
@@ -2969,7 +3083,7 @@ mixin(joinFnBinds((){
 		frame buffer handle will draw primitives from this view into
 		default back buffer.
 		*/
-		[q{void}, q{setViewFrameBuffer}, q{ViewID id, FrameBufferHandle handle}, `C++, "bgfx"`],
+		{q{void}, q{setViewFrameBuffer}, q{ViewID id, FrameBufferHandle handle}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Set view's view matrix and projection matrix,
@@ -2979,7 +3093,7 @@ mixin(joinFnBinds((){
 			view = View matrix.
 			proj = Projection matrix.
 		*/
-		[q{void}, q{setViewTransform}, q{ViewID id, const(void)* view, const(void)* proj}, `C++, "bgfx"`],
+		{q{void}, q{setViewTransform}, q{ViewID id, const(void)* view, const(void)* proj}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Post submit view reordering.
@@ -2989,26 +3103,60 @@ mixin(joinFnBinds((){
 			order = View remap id table. Passing `NULL` will reset view ids
 		to default state.
 		*/
-		[q{void}, q{setViewOrder}, q{ViewID id=0, ushort num=ushort.max, const(ViewID)* order=null}, `C++, "bgfx"`],
+		{q{void}, q{setViewOrder}, q{ViewID id=0, ushort num=ushort.max, const(ViewID)* order=null}, ext: `C++, "bgfx"`},
+		
+		/**
+		* Set view shading rate.
+		* Attention: Availability depends on: `BGFX_CAPS_VARIABLE_RATE_SHADING`.
+		Params:
+			id = View id.
+			shadingRate = Shading rate.
+		*/
+		{q{void}, q{setViewShadingRate}, q{ViewID id, bgfx.impl.ShadingRate.Enum shadingRate=ShadingRate.rate1x1}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Reset all view settings to default.
+		Params:
+			id = _id View id.
 		*/
-		[q{void}, q{resetView}, q{ViewID id}, `C++, "bgfx"`],
+		{q{void}, q{resetView}, q{ViewID id}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Begin submitting draw calls from thread.
 		Params:
 			forThread = Explicitly request an encoder for a worker thread.
 		*/
-		[q{Encoder*}, q{begin}, q{bool forThread=false}, `C++, "bgfx"`],
+		{q{Encoder*}, q{begin}, q{bool forThread=false}, ext: `C++, "bgfx"`},
 		
 		/**
 		* End submitting draw calls from thread.
 		Params:
 			encoder = Encoder.
 		*/
-		[q{void}, q{end}, q{Encoder* encoder}, `C++, "bgfx"`],
+		{q{void}, q{end}, q{Encoder* encoder}, ext: `C++, "bgfx"`},
+		
+		/**
+		* Set shader uniform parameter for view.
+		* Attention: Uniform must be created with `bgfx::UniformFreq::View` argument.
+		Params:
+			id = View id.
+			handle = Uniform.
+			value = Pointer to uniform data.
+			num = Number of elements. Passing `UINT16_MAX` will
+		use the _num passed on uniform creation.
+		*/
+		{q{void}, q{setViewUniform}, q{ViewID id, UniformHandle handle, const(void)* value, ushort num=1}, ext: `C++, "bgfx"`},
+		
+		/**
+		* Set shader uniform parameter for frame.
+		* Attention: Uniform must be created with `bgfx::UniformFreq::View` argument.
+		Params:
+			handle = Uniform.
+			value = Pointer to uniform data.
+			num = Number of elements. Passing `UINT16_MAX` will
+		use the _num passed on uniform creation.
+		*/
+		{q{void}, q{setFrameUniform}, q{UniformHandle handle, const(void)* value, ushort num=1}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Request screen shot of window back buffer.
@@ -3020,7 +3168,7 @@ mixin(joinFnBinds((){
 		made for main window back buffer.
 			filePath = Will be passed to `bgfx::CallbackI::screenShot` callback.
 		*/
-		[q{void}, q{requestScreenShot}, q{FrameBufferHandle handle, const(char)* filePath}, `C++, "bgfx"`],
+		{q{void}, q{requestScreenShot}, q{FrameBufferHandle handle, const(char)* filePath}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Render frame.
@@ -3034,7 +3182,7 @@ mixin(joinFnBinds((){
 		Params:
 			msecs = Timeout in milliseconds.
 		*/
-		[q{RenderFrame}, q{renderFrame}, q{int msecs=-1}, `C++, "bgfx"`],
+		{q{RenderFrame}, q{renderFrame}, q{int msecs=-1}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Set platform data.
@@ -3042,7 +3190,7 @@ mixin(joinFnBinds((){
 		Params:
 			data = Platform data.
 		*/
-		[q{void}, q{setPlatformData}, q{ref const PlatformData data}, `C++, "bgfx"`],
+		{q{void}, q{setPlatformData}, q{ref const PlatformData data}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Get internal data for interop.
@@ -3050,7 +3198,7 @@ mixin(joinFnBinds((){
 		*   use this call.
 		* Warning: Must be called only on render thread.
 		*/
-		[q{const(InternalData)*}, q{getInternalData}, q{}, `C++, "bgfx"`],
+		{q{const(InternalData)*}, q{getInternalData}, q{}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Override internal texture with externally created texture. Previously
@@ -3061,8 +3209,9 @@ mixin(joinFnBinds((){
 		Params:
 			handle = Texture handle.
 			ptr = Native API pointer to texture.
+			layerIndex = Layer index for texture arrays (only implemented for D3D11).
 		*/
-		[q{size_t}, q{overrideInternal}, q{TextureHandle handle, size_t ptr}, `C++, "bgfx"`],
+		{q{size_t}, q{overrideInternal}, q{TextureHandle handle, size_t ptr, ushort layerIndex=0}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Override internal texture by creating new texture. Previously created
@@ -3085,15 +3234,17 @@ mixin(joinFnBinds((){
 		- `BGFX_SAMPLER_[MIN/MAG/MIP]_[POINT/ANISOTROPIC]` - Point or anisotropic
 		  sampling.
 		*/
-		[q{size_t}, q{overrideInternal}, q{TextureHandle handle, ushort width, ushort height, ubyte numMIPs, bgfx.fakeenum.TextureFormat.Enum format, ulong flags}, `C++, "bgfx"`],
+		{q{size_t}, q{overrideInternal}, q{TextureHandle handle, ushort width, ushort height, ubyte numMIPs, bgfx.impl.TextureFormat.Enum format, c_uint64 flags=Texture.none | Sampler.none}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Sets a debug marker. This allows you to group graphics calls together for easy browsing in
 		* graphics debugging tools.
 		Params:
-			marker = Marker string.
+			name = Marker name.
+			len = Marker name length (if length is INT32_MAX, it's expected
+		that _name is zero terminated string.
 		*/
-		[q{void}, q{setMarker}, q{const(char)* marker}, `C++, "bgfx"`],
+		{q{void}, q{setMarker}, q{const(char)* name, int len=int.max}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Set render states for draw primitive.
@@ -3120,7 +3271,7 @@ mixin(joinFnBinds((){
 			rgba = Sets blend factor used by `BGFX_STATE_BLEND_FACTOR` and
 		  `BGFX_STATE_BLEND_INV_FACTOR` blend modes.
 		*/
-		[q{void}, q{setState}, q{ulong state, uint rgba=0}, `C++, "bgfx"`],
+		{q{void}, q{setState}, q{c_uint64 state, uint rgba=0}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Set condition for rendering.
@@ -3128,16 +3279,16 @@ mixin(joinFnBinds((){
 			handle = Occlusion query handle.
 			visible = Render if occlusion query is visible.
 		*/
-		[q{void}, q{setCondition}, q{OcclusionQueryHandle handle, bool visible}, `C++, "bgfx"`],
+		{q{void}, q{setCondition}, q{OcclusionQueryHandle handle, bool visible}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Set stencil test state.
 		Params:
-			fstencil = Front stencil state.
-			bstencil = Back stencil state. If back is set to `BGFX_STENCIL_NONE`
+			fStencil = Front stencil state.
+			bStencil = Back stencil state. If back is set to `BGFX_STENCIL_NONE`
 		_fstencil is applied to both front and back facing primitives.
 		*/
-		[q{void}, q{setStencil}, q{uint fstencil, uint bstencil=Stencil.none}, `C++, "bgfx"`],
+		{q{void}, q{setStencil}, q{uint fStencil, uint bStencil=Stencil.none}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Set scissor for draw primitive.
@@ -3149,7 +3300,7 @@ mixin(joinFnBinds((){
 			width = Width of view scissor region.
 			height = Height of view scissor region.
 		*/
-		[q{ushort}, q{setScissor}, q{ushort x, ushort y, ushort width, ushort height}, `C++, "bgfx"`],
+		{q{ushort}, q{setScissor}, q{ushort x, ushort y, ushort width, ushort height}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Set scissor from cache for draw primitive.
@@ -3158,7 +3309,7 @@ mixin(joinFnBinds((){
 		Params:
 			cache = Index in scissor cache.
 		*/
-		[q{void}, q{setScissor}, q{ushort cache=ushort.max}, `C++, "bgfx"`],
+		{q{void}, q{setScissor}, q{ushort cache=ushort.max}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Set model matrix for draw primitive. If it is not called,
@@ -3167,7 +3318,7 @@ mixin(joinFnBinds((){
 			mtx = Pointer to first matrix in array.
 			num = Number of matrices in array.
 		*/
-		[q{uint}, q{setTransform}, q{const(void)* mtx, ushort num}, `C++, "bgfx"`],
+		{q{uint}, q{setTransform}, q{const(void)* mtx, ushort num=1}, ext: `C++, "bgfx"`},
 		
 		/**
 		*  Set model matrix from matrix cache for draw primitive.
@@ -3175,7 +3326,7 @@ mixin(joinFnBinds((){
 			cache = Index in matrix cache.
 			num = Number of matrices from cache.
 		*/
-		[q{void}, q{setTransform}, q{uint cache, ushort num=1}, `C++, "bgfx"`],
+		{q{void}, q{setTransform}, q{uint cache, ushort num=1}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Reserve matrices in internal matrix cache.
@@ -3184,7 +3335,7 @@ mixin(joinFnBinds((){
 			transform = Pointer to `Transform` structure.
 			num = Number of matrices.
 		*/
-		[q{uint}, q{allocTransform}, q{Transform* transform, ushort num}, `C++, "bgfx"`],
+		{q{uint}, q{allocTransform}, q{Transform* transform, ushort num}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Set shader uniform parameter for draw primitive.
@@ -3194,14 +3345,14 @@ mixin(joinFnBinds((){
 			num = Number of elements. Passing `UINT16_MAX` will
 		use the _num passed on uniform creation.
 		*/
-		[q{void}, q{setUniform}, q{UniformHandle handle, const(void)* value, ushort num=1}, `C++, "bgfx"`],
+		{q{void}, q{setUniform}, q{UniformHandle handle, const(void)* value, ushort num=1}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Set index buffer for draw primitive.
 		Params:
 			handle = Index buffer.
 		*/
-		[q{void}, q{setIndexBuffer}, q{IndexBufferHandle handle}, `C++, "bgfx"`],
+		{q{void}, q{setIndexBuffer}, q{IndexBufferHandle handle}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Set index buffer for draw primitive.
@@ -3210,14 +3361,14 @@ mixin(joinFnBinds((){
 			firstIndex = First index to render.
 			numIndices = Number of indices to render.
 		*/
-		[q{void}, q{setIndexBuffer}, q{IndexBufferHandle handle, uint firstIndex, uint numIndices}, `C++, "bgfx"`],
+		{q{void}, q{setIndexBuffer}, q{IndexBufferHandle handle, uint firstIndex, uint numIndices}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Set index buffer for draw primitive.
 		Params:
 			handle = Dynamic index buffer.
 		*/
-		[q{void}, q{setIndexBuffer}, q{DynamicIndexBufferHandle handle}, `C++, "bgfx"`],
+		{q{void}, q{setIndexBuffer}, q{DynamicIndexBufferHandle handle}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Set index buffer for draw primitive.
@@ -3226,14 +3377,14 @@ mixin(joinFnBinds((){
 			firstIndex = First index to render.
 			numIndices = Number of indices to render.
 		*/
-		[q{void}, q{setIndexBuffer}, q{DynamicIndexBufferHandle handle, uint firstIndex, uint numIndices}, `C++, "bgfx"`],
+		{q{void}, q{setIndexBuffer}, q{DynamicIndexBufferHandle handle, uint firstIndex, uint numIndices}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Set index buffer for draw primitive.
 		Params:
 			tib = Transient index buffer.
 		*/
-		[q{void}, q{setIndexBuffer}, q{const(TransientIndexBuffer)* tib}, `C++, "bgfx"`],
+		{q{void}, q{setIndexBuffer}, q{const(TransientIndexBuffer)* tib}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Set index buffer for draw primitive.
@@ -3242,7 +3393,7 @@ mixin(joinFnBinds((){
 			firstIndex = First index to render.
 			numIndices = Number of indices to render.
 		*/
-		[q{void}, q{setIndexBuffer}, q{const(TransientIndexBuffer)* tib, uint firstIndex, uint numIndices}, `C++, "bgfx"`],
+		{q{void}, q{setIndexBuffer}, q{const(TransientIndexBuffer)* tib, uint firstIndex, uint numIndices}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Set vertex buffer for draw primitive.
@@ -3250,7 +3401,7 @@ mixin(joinFnBinds((){
 			stream = Vertex stream.
 			handle = Vertex buffer.
 		*/
-		[q{void}, q{setVertexBuffer}, q{ubyte stream, VertexBufferHandle handle}, `C++, "bgfx"`],
+		{q{void}, q{setVertexBuffer}, q{ubyte stream, VertexBufferHandle handle}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Set vertex buffer for draw primitive.
@@ -3263,7 +3414,7 @@ mixin(joinFnBinds((){
 		handle is used, vertex layout used for creation
 		of vertex buffer will be used.
 		*/
-		[q{void}, q{setVertexBuffer}, q{ubyte stream, VertexBufferHandle handle, uint startVertex, uint numVertices, VertexLayoutHandle layoutHandle=invalidHandle!VertexLayoutHandle}, `C++, "bgfx"`],
+		{q{void}, q{setVertexBuffer}, q{ubyte stream, VertexBufferHandle handle, uint startVertex, uint numVertices, VertexLayoutHandle layoutHandle=invalidHandle!VertexLayoutHandle}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Set vertex buffer for draw primitive.
@@ -3271,7 +3422,7 @@ mixin(joinFnBinds((){
 			stream = Vertex stream.
 			handle = Dynamic vertex buffer.
 		*/
-		[q{void}, q{setVertexBuffer}, q{ubyte stream, DynamicVertexBufferHandle handle}, `C++, "bgfx"`],
+		{q{void}, q{setVertexBuffer}, q{ubyte stream, DynamicVertexBufferHandle handle}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Set vertex buffer for draw primitive.
@@ -3284,7 +3435,7 @@ mixin(joinFnBinds((){
 		handle is used, vertex layout used for creation
 		of vertex buffer will be used.
 		*/
-		[q{void}, q{setVertexBuffer}, q{ubyte stream, DynamicVertexBufferHandle handle, uint startVertex, uint numVertices, VertexLayoutHandle layoutHandle=invalidHandle!VertexLayoutHandle}, `C++, "bgfx"`],
+		{q{void}, q{setVertexBuffer}, q{ubyte stream, DynamicVertexBufferHandle handle, uint startVertex, uint numVertices, VertexLayoutHandle layoutHandle=invalidHandle!VertexLayoutHandle}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Set vertex buffer for draw primitive.
@@ -3292,7 +3443,7 @@ mixin(joinFnBinds((){
 			stream = Vertex stream.
 			tvb = Transient vertex buffer.
 		*/
-		[q{void}, q{setVertexBuffer}, q{ubyte stream, const(TransientVertexBuffer)* tvb}, `C++, "bgfx"`],
+		{q{void}, q{setVertexBuffer}, q{ubyte stream, const(TransientVertexBuffer)* tvb}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Set vertex buffer for draw primitive.
@@ -3305,7 +3456,7 @@ mixin(joinFnBinds((){
 		handle is used, vertex layout used for creation
 		of vertex buffer will be used.
 		*/
-		[q{void}, q{setVertexBuffer}, q{ubyte stream, const(TransientVertexBuffer)* tvb, uint startVertex, uint numVertices, VertexLayoutHandle layoutHandle=invalidHandle!VertexLayoutHandle}, `C++, "bgfx"`],
+		{q{void}, q{setVertexBuffer}, q{ubyte stream, const(TransientVertexBuffer)* tvb, uint startVertex, uint numVertices, VertexLayoutHandle layoutHandle=invalidHandle!VertexLayoutHandle}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Set number of vertices for auto generated vertices use in conjunction
@@ -3314,14 +3465,14 @@ mixin(joinFnBinds((){
 		Params:
 			numVertices = Number of vertices.
 		*/
-		[q{void}, q{setVertexCount}, q{uint numVertices}, `C++, "bgfx"`],
+		{q{void}, q{setVertexCount}, q{uint numVertices}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Set instance data buffer for draw primitive.
 		Params:
 			idb = Transient instance data buffer.
 		*/
-		[q{void}, q{setInstanceDataBuffer}, q{const(InstanceDataBuffer)* idb}, `C++, "bgfx"`],
+		{q{void}, q{setInstanceDataBuffer}, q{const(InstanceDataBuffer)* idb}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Set instance data buffer for draw primitive.
@@ -3330,7 +3481,7 @@ mixin(joinFnBinds((){
 			start = First instance data.
 			num = Number of data instances.
 		*/
-		[q{void}, q{setInstanceDataBuffer}, q{const(InstanceDataBuffer)* idb, uint start, uint num}, `C++, "bgfx"`],
+		{q{void}, q{setInstanceDataBuffer}, q{const(InstanceDataBuffer)* idb, uint start, uint num}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Set instance data buffer for draw primitive.
@@ -3339,7 +3490,7 @@ mixin(joinFnBinds((){
 			startVertex = First instance data.
 			num = Number of data instances.
 		*/
-		[q{void}, q{setInstanceDataBuffer}, q{VertexBufferHandle handle, uint startVertex, uint num}, `C++, "bgfx"`],
+		{q{void}, q{setInstanceDataBuffer}, q{VertexBufferHandle handle, uint startVertex, uint num}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Set instance data buffer for draw primitive.
@@ -3348,14 +3499,16 @@ mixin(joinFnBinds((){
 			startVertex = First instance data.
 			num = Number of data instances.
 		*/
-		[q{void}, q{setInstanceDataBuffer}, q{DynamicVertexBufferHandle handle, uint startVertex, uint num}, `C++, "bgfx"`],
+		{q{void}, q{setInstanceDataBuffer}, q{DynamicVertexBufferHandle handle, uint startVertex, uint num}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Set number of instances for auto generated instances use in conjunction
 		* with gl_InstanceID.
 		* Attention: Availability depends on: `BGFX_CAPS_VERTEX_ID`.
+		Params:
+			numInstances = Number of instances.
 		*/
-		[q{void}, q{setInstanceCount}, q{uint numInstances}, `C++, "bgfx"`],
+		{q{void}, q{setInstanceCount}, q{uint numInstances}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Set texture stage for draw primitive.
@@ -3370,7 +3523,7 @@ mixin(joinFnBinds((){
 		  - `BGFX_SAMPLER_[MIN/MAG/MIP]_[POINT/ANISOTROPIC]` - Point or anisotropic
 		    sampling.
 		*/
-		[q{void}, q{setTexture}, q{ubyte stage, UniformHandle sampler, TextureHandle handle, uint flags=uint.max}, `C++, "bgfx"`],
+		{q{void}, q{setTexture}, q{ubyte stage, UniformHandle sampler, TextureHandle handle, uint flags=uint.max}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Submit an empty primitive for rendering. Uniforms and draw state
@@ -3380,7 +3533,7 @@ mixin(joinFnBinds((){
 		Params:
 			id = View id.
 		*/
-		[q{void}, q{touch}, q{ViewID id}, `C++, "bgfx"`],
+		{q{void}, q{touch}, q{ViewID id}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Submit primitive for rendering.
@@ -3390,7 +3543,7 @@ mixin(joinFnBinds((){
 			depth = Depth for sorting.
 			flags = Which states to discard for next draw. See `BGFX_DISCARD_*`.
 		*/
-		[q{void}, q{submit}, q{ViewID id, ProgramHandle program, uint depth=0, ubyte flags=Discard.all}, `C++, "bgfx"`],
+		{q{void}, q{submit}, q{ViewID id, ProgramHandle program, uint depth=0, ubyte flags=Discard.all}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Submit primitive with occlusion query for rendering.
@@ -3401,7 +3554,7 @@ mixin(joinFnBinds((){
 			depth = Depth for sorting.
 			flags = Which states to discard for next draw. See `BGFX_DISCARD_*`.
 		*/
-		[q{void}, q{submit}, q{ViewID id, ProgramHandle program, OcclusionQueryHandle occlusionQuery, uint depth=0, ubyte flags=Discard.all}, `C++, "bgfx"`],
+		{q{void}, q{submit}, q{ViewID id, ProgramHandle program, OcclusionQueryHandle occlusionQuery, uint depth=0, ubyte flags=Discard.all}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Submit primitive for rendering with index and instance data info from
@@ -3416,7 +3569,7 @@ mixin(joinFnBinds((){
 			depth = Depth for sorting.
 			flags = Which states to discard for next draw. See `BGFX_DISCARD_*`.
 		*/
-		[q{void}, q{submit}, q{ViewID id, ProgramHandle program, IndirectBufferHandle indirectHandle, ushort start=0, ushort num=1, uint depth=0, ubyte flags=Discard.all}, `C++, "bgfx"`],
+		{q{void}, q{submit}, q{ViewID id, ProgramHandle program, IndirectBufferHandle indirectHandle, uint start=0, uint num=1, uint depth=0, ubyte flags=Discard.all}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Submit primitive for rendering with index and instance data info and
@@ -3434,7 +3587,7 @@ mixin(joinFnBinds((){
 			depth = Depth for sorting.
 			flags = Which states to discard for next draw. See `BGFX_DISCARD_*`.
 		*/
-		[q{void}, q{submit}, q{ViewID id, ProgramHandle program, IndirectBufferHandle indirectHandle, ushort start, IndexBufferHandle numHandle, uint numIndex=0, ushort numMax=ushort.max, uint depth=0, ubyte flags=Discard.all}, `C++, "bgfx"`],
+		{q{void}, q{submit}, q{ViewID id, ProgramHandle program, IndirectBufferHandle indirectHandle, uint start, IndexBufferHandle numHandle, uint numIndex=0, uint numMax=uint.max, uint depth=0, ubyte flags=Discard.all}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Set compute index buffer.
@@ -3443,7 +3596,7 @@ mixin(joinFnBinds((){
 			handle = Index buffer handle.
 			access = Buffer access. See `Access::Enum`.
 		*/
-		[q{void}, q{setBuffer}, q{ubyte stage, IndexBufferHandle handle, bgfx.fakeenum.Access.Enum access}, `C++, "bgfx"`],
+		{q{void}, q{setBuffer}, q{ubyte stage, IndexBufferHandle handle, bgfx.impl.Access.Enum access}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Set compute vertex buffer.
@@ -3452,7 +3605,7 @@ mixin(joinFnBinds((){
 			handle = Vertex buffer handle.
 			access = Buffer access. See `Access::Enum`.
 		*/
-		[q{void}, q{setBuffer}, q{ubyte stage, VertexBufferHandle handle, bgfx.fakeenum.Access.Enum access}, `C++, "bgfx"`],
+		{q{void}, q{setBuffer}, q{ubyte stage, VertexBufferHandle handle, bgfx.impl.Access.Enum access}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Set compute dynamic index buffer.
@@ -3461,7 +3614,7 @@ mixin(joinFnBinds((){
 			handle = Dynamic index buffer handle.
 			access = Buffer access. See `Access::Enum`.
 		*/
-		[q{void}, q{setBuffer}, q{ubyte stage, DynamicIndexBufferHandle handle, bgfx.fakeenum.Access.Enum access}, `C++, "bgfx"`],
+		{q{void}, q{setBuffer}, q{ubyte stage, DynamicIndexBufferHandle handle, bgfx.impl.Access.Enum access}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Set compute dynamic vertex buffer.
@@ -3470,7 +3623,7 @@ mixin(joinFnBinds((){
 			handle = Dynamic vertex buffer handle.
 			access = Buffer access. See `Access::Enum`.
 		*/
-		[q{void}, q{setBuffer}, q{ubyte stage, DynamicVertexBufferHandle handle, bgfx.fakeenum.Access.Enum access}, `C++, "bgfx"`],
+		{q{void}, q{setBuffer}, q{ubyte stage, DynamicVertexBufferHandle handle, bgfx.impl.Access.Enum access}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Set compute indirect buffer.
@@ -3479,7 +3632,7 @@ mixin(joinFnBinds((){
 			handle = Indirect buffer handle.
 			access = Buffer access. See `Access::Enum`.
 		*/
-		[q{void}, q{setBuffer}, q{ubyte stage, IndirectBufferHandle handle, bgfx.fakeenum.Access.Enum access}, `C++, "bgfx"`],
+		{q{void}, q{setBuffer}, q{ubyte stage, IndirectBufferHandle handle, bgfx.impl.Access.Enum access}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Set compute image from texture.
@@ -3490,7 +3643,7 @@ mixin(joinFnBinds((){
 			access = Image access. See `Access::Enum`.
 			format = Texture format. See: `TextureFormat::Enum`.
 		*/
-		[q{void}, q{setImage}, q{ubyte stage, TextureHandle handle, ubyte mip, bgfx.fakeenum.Access.Enum access, bgfx.fakeenum.TextureFormat.Enum format=TextureFormat.count}, `C++, "bgfx"`],
+		{q{void}, q{setImage}, q{ubyte stage, TextureHandle handle, ubyte mip, bgfx.impl.Access.Enum access, bgfx.impl.TextureFormat.Enum format=TextureFormat.count}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Dispatch compute.
@@ -3502,7 +3655,7 @@ mixin(joinFnBinds((){
 			numZ = Number of groups Z.
 			flags = Discard or preserve states. See `BGFX_DISCARD_*`.
 		*/
-		[q{void}, q{dispatch}, q{ViewID id, ProgramHandle program, uint numX=1, uint numY=1, uint numZ=1, ubyte flags=Discard.all}, `C++, "bgfx"`],
+		{q{void}, q{dispatch}, q{ViewID id, ProgramHandle program, uint numX=1, uint numY=1, uint numZ=1, ubyte flags=Discard.all}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Dispatch compute indirect.
@@ -3514,14 +3667,14 @@ mixin(joinFnBinds((){
 			num = Number of dispatches.
 			flags = Discard or preserve states. See `BGFX_DISCARD_*`.
 		*/
-		[q{void}, q{dispatch}, q{ViewID id, ProgramHandle program, IndirectBufferHandle indirectHandle, ushort start=0, ushort num=1, ubyte flags=Discard.all}, `C++, "bgfx"`],
+		{q{void}, q{dispatch}, q{ViewID id, ProgramHandle program, IndirectBufferHandle indirectHandle, uint start=0, uint num=1, ubyte flags=Discard.all}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Discard previously set state for draw or compute call.
 		Params:
 			flags = Draw/compute states to discard.
 		*/
-		[q{void}, q{discard}, q{ubyte flags=Discard.all}, `C++, "bgfx"`],
+		{q{void}, q{discard}, q{ubyte flags=Discard.all}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Blit 2D texture region between two 2D textures.
@@ -3538,7 +3691,7 @@ mixin(joinFnBinds((){
 			width = Width of region.
 			height = Height of region.
 		*/
-		[q{void}, q{blit}, q{ViewID id, TextureHandle dst, ushort dstX, ushort dstY, TextureHandle src, ushort srcX=0, ushort srcY=0, ushort width=ushort.max, ushort height=ushort.max}, `C++, "bgfx"`],
+		{q{void}, q{blit}, q{ViewID id, TextureHandle dst, ushort dstX, ushort dstY, TextureHandle src, ushort srcX=0, ushort srcY=0, ushort width=ushort.max, ushort height=ushort.max}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Blit 2D texture region between two 2D textures.
@@ -3565,17 +3718,17 @@ mixin(joinFnBinds((){
 			depth = If texture is 3D this argument represents depth of region, otherwise it's
 		unused.
 		*/
-		[q{void}, q{blit}, q{ViewID id, TextureHandle dst, ubyte dstMIP, ushort dstX, ushort dstY, ushort dstZ, TextureHandle src, ubyte srcMIP=0, ushort srcX=0, ushort srcY=0, ushort srcZ=0, ushort width=ushort.max, ushort height=ushort.max, ushort depth=ushort.max}, `C++, "bgfx"`],
+		{q{void}, q{blit}, q{ViewID id, TextureHandle dst, ubyte dstMIP, ushort dstX, ushort dstY, ushort dstZ, TextureHandle src, ubyte srcMIP=0, ushort srcX=0, ushort srcY=0, ushort srcZ=0, ushort width=ushort.max, ushort height=ushort.max, ushort depth=ushort.max}, ext: `C++, "bgfx"`},
 		
-	]);
+	];
 	return ret;
-}(), __MODULE__, "Resolution, Init, Attachment, VertexLayout, Encoder, "));
+}(), "Resolution, Init.Limits, Init, Attachment, VertexLayout, Encoder, "));
 
 static if(!staticBinding):
 import bindbc.loader;
 
 debug{
-	mixin(makeDynloadFns("Bgfx", makeLibPaths(["bgfx-shared-libDebug", "bgfxDebug", "bgfx"]), [__MODULE__]));
+	mixin(makeDynloadFns("Bgfx", makeLibPaths(["bgfx-shared-libDebug", "bgfxDebug", "bgfx"]), [__MODULE__, "bgfx.impl"]));
 }else{
-	mixin(makeDynloadFns("Bgfx", makeLibPaths(["bgfx-shared-libRelease", "bgfxRelease", "bgfx"]), [__MODULE__]));
+	mixin(makeDynloadFns("Bgfx", makeLibPaths(["bgfx-shared-libRelease", "bgfxRelease", "bgfx"]), [__MODULE__, "bgfx.impl"]));
 }

@@ -200,7 +200,7 @@ public:
 		init.vendorId = args.m_pciId;
 		init.platformData.nwh  = entry::getNativeWindowHandle(entry::kDefaultWindowHandle);
 		init.platformData.ndt  = entry::getNativeDisplayHandle();
-		init.platformData.type = entry::getNativeWindowHandleType(entry::kDefaultWindowHandle);
+		init.platformData.type = entry::getNativeWindowHandleType();
 		init.resolution.width  = m_width;
 		init.resolution.height = m_height;
 		init.resolution.reset  = m_reset;
@@ -269,7 +269,6 @@ public:
 		// Imgui.
 		imguiCreate();
 
-		m_timeOffset = bx::getHPCounter();
 		const bgfx::RendererType::Enum renderer = bgfx::getRendererType();
 		s_texelHalf = bgfx::RendererType::Direct3D9 == renderer ? 0.5f : 0.0f;
 
@@ -286,6 +285,8 @@ public:
 
 		cameraSetPosition({ 0.0f, 0.0f, -15.0f });
 		cameraSetVerticalAngle(0.0f);
+
+		m_frameTime.reset();
 	}
 
 	virtual int shutdown() override
@@ -332,6 +333,10 @@ public:
 	{
 		if (!entry::processEvents(m_width, m_height, m_debug, m_reset, &m_mouseState) )
 		{
+			m_frameTime.frame();
+			const float time      = bx::toSeconds<float>(m_frameTime.getDurationTime() );
+			const float deltaTime = bx::toSeconds<float>(m_frameTime.getDeltaTime() );
+
 			imguiBeginFrame(
 				  m_mouseState.m_mx
 				, m_mouseState.m_my
@@ -344,15 +349,6 @@ public:
 				);
 
 			showExampleDialog(this);
-
-			int64_t now = bx::getHPCounter();
-			static int64_t last = now;
-			const int64_t frameTime = now - last;
-			last = now;
-			const double freq = double(bx::getHPFrequency() );
-			const float deltaTime = float(frameTime/freq);
-
-			float time = (float)( (now-m_timeOffset)/freq);
 
 			if (2 > m_caps->limits.maxFBAttachments)
 			{
@@ -401,16 +397,30 @@ public:
 						m_texChainFb[ii]  = bgfx::createFrameBuffer(
 							  (uint16_t)(m_width  >> ii)
 							, (uint16_t)(m_height >> ii)
-							, bgfx::TextureFormat::RGBA32F
+							, bgfx::TextureFormat::RGBA16F
 							, tsFlags
 							);
 					}
 
 					bgfx::TextureHandle gbufferTex[] =
 					{
-						bgfx::createTexture2D(uint16_t(m_width), uint16_t(m_height), false, 1, bgfx::TextureFormat::RGBA32F, tsFlags),
+						bgfx::createTexture2D(
+							  uint16_t(m_width)
+							, uint16_t(m_height)
+							, false
+							, 1
+							, bgfx::TextureFormat::RGBA16F
+							, tsFlags
+							),
 						bgfx::getTexture(m_texChainFb[0]),
-						bgfx::createTexture2D(uint16_t(m_width), uint16_t(m_height), false, 1, bgfx::TextureFormat::D32F, tsFlags),
+						bgfx::createTexture2D(
+							  uint16_t(m_width)
+							, uint16_t(m_height)
+							, false
+							, 1
+							, bgfx::TextureFormat::D32F
+							, tsFlags
+							),
 					};
 
 					m_gbuffer = bgfx::createFrameBuffer(BX_COUNTOF(gbufferTex), gbufferTex, true);
@@ -649,7 +659,8 @@ public:
 	entry::MouseState m_mouseState;
 
 	const bgfx::Caps* m_caps;
-	int64_t m_timeOffset;
+
+	FrameTime m_frameTime;
 };
 
 } // namespace

@@ -159,9 +159,11 @@ spv_result_t LogicalsPass(ValidationState_t& _, const Instruction* inst) {
 
         const spv::Op type_opcode = type_inst->opcode();
         switch (type_opcode) {
+          case spv::Op::OpTypeUntypedPointerKHR:
           case spv::Op::OpTypePointer: {
             if (_.addressing_model() == spv::AddressingModel::Logical &&
-                !_.features().variable_pointers)
+                !_.HasCapability(
+                    spv::Capability::VariablePointersStorageBuffer))
               return _.diag(SPV_ERROR_INVALID_DATA, inst)
                      << "Using pointers with OpSelect requires capability "
                      << "VariablePointers or VariablePointersStorageBuffer";
@@ -180,6 +182,10 @@ spv_result_t LogicalsPass(ValidationState_t& _, const Instruction* inst) {
 
           case spv::Op::OpTypeVector: {
             dimension = type_inst->word(3);
+            break;
+          }
+          case spv::Op::OpTypeVectorIdEXT: {
+            dimension = _.GetDimension(result_type);
             break;
           }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2023 Branimir Karadzic. All rights reserved.
+ * Copyright 2011-2026 Branimir Karadzic. All rights reserved.
  * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
  */
 
@@ -31,7 +31,7 @@ namespace bgfx { namespace d3d9
 		{ D3DPT_POINTLIST,     1, 1, 0 },
 		{ D3DPRIMITIVETYPE(0), 0, 0, 0 },
 	};
-	BX_STATIC_ASSERT(Topology::Count == BX_COUNTOF(s_primInfo)-1);
+	static_assert(Topology::Count == BX_COUNTOF(s_primInfo)-1);
 
 	static const D3DMULTISAMPLE_TYPE s_checkMsaa[] =
 	{
@@ -174,6 +174,10 @@ namespace bgfx { namespace d3d9
 		{ D3DFMT_UNKNOWN       }, // ETC2
 		{ D3DFMT_UNKNOWN       }, // ETC2A
 		{ D3DFMT_UNKNOWN       }, // ETC2A1
+		{ D3DFMT_UNKNOWN       }, // EACR11 UNORM
+		{ D3DFMT_UNKNOWN       }, // EACR11 SNORM
+		{ D3DFMT_UNKNOWN       }, // EACRG11 UNORM
+		{ D3DFMT_UNKNOWN       }, // EACRG11 SNORM
 		{ D3DFMT_UNKNOWN       }, // PTC12
 		{ D3DFMT_UNKNOWN       }, // PTC14
 		{ D3DFMT_UNKNOWN       }, // PTC12A
@@ -260,7 +264,7 @@ namespace bgfx { namespace d3d9
 		{ D3DFMT_D32F_LOCKABLE }, // D32F
 		{ D3DFMT_S8_LOCKABLE   }, // D0S8
 	};
-	BX_STATIC_ASSERT(TextureFormat::Count == BX_COUNTOF(s_textureFormat) );
+	static_assert(TextureFormat::Count == BX_COUNTOF(s_textureFormat) );
 
 	static ExtendedFormat s_extendedFormats[ExtendedFormat::Count] =
 	{
@@ -309,7 +313,7 @@ namespace bgfx { namespace d3d9
 		{ 0, 0, D3DDECLTYPE_FLOAT2, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD,     7 },
 		D3DDECL_END()
 	};
-	BX_STATIC_ASSERT(Attrib::Count == BX_COUNTOF(s_attrib)-1);
+	static_assert(Attrib::Count == BX_COUNTOF(s_attrib)-1);
 
 	static const uint8_t s_attribType[][4][2] =
 	{
@@ -344,7 +348,7 @@ namespace bgfx { namespace d3d9
 			{ D3DDECLTYPE_FLOAT4,    D3DDECLTYPE_FLOAT4    },
 		},
 	};
-	BX_STATIC_ASSERT(AttribType::Count == BX_COUNTOF(s_attribType) );
+	static_assert(AttribType::Count == BX_COUNTOF(s_attribType) );
 
 	static D3DVERTEXELEMENT9* fillVertexLayout(uint8_t _stream, D3DVERTEXELEMENT9* _out, const VertexLayout& _layout)
 	{
@@ -782,7 +786,7 @@ namespace bgfx { namespace d3d9
 
 			for (uint32_t ii = 0; ii < TextureFormat::Count; ++ii)
 			{
-				uint16_t support = BGFX_CAPS_FORMAT_TEXTURE_NONE;
+				uint32_t support = BGFX_CAPS_FORMAT_TEXTURE_NONE;
 
 				support |= SUCCEEDED(m_d3d9->CheckDeviceFormat(m_adapter
 					, m_deviceType
@@ -867,6 +871,27 @@ namespace bgfx { namespace d3d9
 				g_caps.formats[ii] = support;
 			}
 
+			switch (adapterFormat)
+			{
+			case D3DFMT_X8R8G8B8:
+			case D3DFMT_A8R8G8B8:
+				g_caps.formats[TextureFormat::BGRA8] |= BGFX_CAPS_FORMAT_TEXTURE_BACKBUFFER;
+				break;
+
+			case D3DFMT_R5G6B5:
+				g_caps.formats[TextureFormat::B5G6R5] |= BGFX_CAPS_FORMAT_TEXTURE_BACKBUFFER;
+				g_caps.formats[TextureFormat::R5G6B5] |= BGFX_CAPS_FORMAT_TEXTURE_BACKBUFFER;
+				break;
+
+			case D3DFMT_A2R10G10B10:
+				g_caps.formats[TextureFormat::RGB10A2] |= BGFX_CAPS_FORMAT_TEXTURE_BACKBUFFER;
+				break;
+
+			default:
+				g_caps.formats[TextureFormat::BGRA8] |= BGFX_CAPS_FORMAT_TEXTURE_BACKBUFFER;
+				break;
+			}
+
 			m_fmtDepth = D3DFMT_D24S8;
 
 			{
@@ -920,7 +945,7 @@ namespace bgfx { namespace d3d9
 				{
 					DX_RELEASE(m_device, 0);
 				}
-				BX_FALLTHROUGH;
+				[[fallthrough]];
 
 			case ErrorState::CreatedD3D9:
 				if (NULL != m_d3d9ex)
@@ -932,12 +957,12 @@ namespace bgfx { namespace d3d9
 				{
 					DX_RELEASE(m_d3d9, 0);
 				}
-				BX_FALLTHROUGH;
+				[[fallthrough]];
 
 			case ErrorState::LoadedD3D9:
 				m_nvapi.shutdown();
 				bx::dlclose(m_d3d9Dll);
-				BX_FALLTHROUGH;
+				[[fallthrough]];
 
 			case ErrorState::Default:
 				break;
@@ -1086,27 +1111,17 @@ namespace bgfx { namespace d3d9
 			m_program[_handle.idx].destroy();
 		}
 
-		void* createTexture(TextureHandle _handle, const Memory* _mem, uint64_t _flags, uint8_t _skip) override
+		void* createTexture(TextureHandle _handle, const Memory* _mem, uint64_t _flags, uint8_t _skip, uint64_t /*_external*/) override
 		{
 			m_textures[_handle.idx].create(_mem, _flags, _skip);
 			return NULL;
 		}
 
-		void updateTextureBegin(TextureHandle _handle, uint8_t _side, uint8_t _mip) override
+		void updateTexture(TextureHandle _handle, uint8_t _side, uint8_t _mip, const Rect& _rect, uint16_t _z, uint16_t _depth, uint16_t _pitch, const Memory* _mem) override
 		{
-			m_updateTexture = &m_textures[_handle.idx];
-			m_updateTexture->updateBegin(_side, _mip);
-		}
-
-		void updateTexture(TextureHandle /*_handle*/, uint8_t _side, uint8_t _mip, const Rect& _rect, uint16_t _z, uint16_t _depth, uint16_t _pitch, const Memory* _mem) override
-		{
-			m_updateTexture->update(_side, _mip, _rect, _z, _depth, _pitch, _mem);
-		}
-
-		void updateTextureEnd() override
-		{
-			m_updateTexture->updateEnd();
-			m_updateTexture = NULL;
+			m_textures[_handle.idx].updateBegin(_side, _mip);
+			m_textures[_handle.idx].update(_side, _mip, _rect, _z, _depth, _pitch, _mem);
+			m_textures[_handle.idx].updateEnd();
 		}
 
 		void readTexture(TextureHandle _handle, void* _data, uint8_t _mip) override
@@ -1150,7 +1165,7 @@ namespace bgfx { namespace d3d9
 			const Memory* mem = alloc(size);
 
 			bx::StaticMemoryBlockWriter writer(mem->data, mem->size);
-			uint32_t magic = BGFX_CHUNK_MAGIC_TEX;
+			uint32_t magic = kChunkMagicTex;
 			bx::write(&writer, magic, bx::ErrorAssert{});
 
 			TextureCreate tc;
@@ -1170,7 +1185,7 @@ namespace bgfx { namespace d3d9
 			release(mem);
 		}
 
-		void overrideInternal(TextureHandle _handle, uintptr_t _ptr) override
+		void overrideInternal(TextureHandle _handle, uintptr_t _ptr, uint16_t /*_layerIndex*/) override
 		{
 			// Resource ref. counts might be messed up outside of bgfx.
 			// Disabling ref. count check once texture is overridden.
@@ -1302,6 +1317,7 @@ namespace bgfx { namespace d3d9
 				, params.BackBufferWidth
 				, params.BackBufferHeight
 				, rect.Pitch
+				, TextureFormat::BGRA8
 				, &data[point.y*rect.Pitch+point.x*bytesPerPixel]
 				, params.BackBufferHeight*rect.Pitch
 				, false
@@ -1355,14 +1371,14 @@ namespace bgfx { namespace d3d9
 
 		virtual void setName(Handle _handle, const char* _name, uint16_t _len) override
 		{
-			BX_UNUSED(_handle, _name, _len)
+			BX_UNUSED(_handle, _name, _len);
 		}
 
 		void submitBlit(BlitState& _bs, uint16_t _view);
 
 		void submit(Frame* _render, ClearQuad& _clearQuad, TextVideoMemBlitter& _textVideoMemBlitter) override;
 
-		void blitSetup(TextVideoMemBlitter& _blitter) override
+		void dbgTextRenderBegin(TextVideoMemBlitter& _blitter) override
 		{
 			uint32_t width  = m_params.BackBufferWidth;
 			uint32_t height = m_params.BackBufferHeight;
@@ -1411,7 +1427,7 @@ namespace bgfx { namespace d3d9
 			m_textures[_blitter.m_texture.idx].commit(0, BGFX_SAMPLER_INTERNAL_DEFAULT, NULL);
 		}
 
-		void blitRender(TextVideoMemBlitter& _blitter, uint32_t _numIndices) override
+		void dbgTextRender(TextVideoMemBlitter& _blitter, uint32_t _numIndices) override
 		{
 			const uint32_t numVertices = _numIndices*4/6;
 			if (0 < numVertices)
@@ -1427,6 +1443,10 @@ namespace bgfx { namespace d3d9
 					, _numIndices / 3
 					) );
 			}
+		}
+
+		void dbgTextRenderEnd(TextVideoMemBlitter& /*_blitter*/) override
+		{
 		}
 
 		void updateMsaa()
@@ -1892,7 +1912,7 @@ namespace bgfx { namespace d3d9
 					break;
 				}
 
-				UniformType::Enum type;
+				uint8_t type;
 				uint16_t loc;
 				uint16_t num;
 				uint16_t copy;
@@ -2104,8 +2124,8 @@ namespace bgfx { namespace d3d9
 				}
 
 				VertexBufferD3D9& vb = m_vertexBuffers[_clearQuad.m_vb.idx];
-				VertexLayout& layout = _clearQuad.m_layout;
-				uint32_t stride = _clearQuad.m_layout.m_stride;
+				const VertexLayout& layout = m_vertexLayouts[_clearQuad.m_layout.idx];
+				uint32_t stride = layout.m_stride;
 
 				ProgramD3D9& program = m_program[_clearQuad.m_program[numMrt-1].idx];
 				device->SetVertexShader(program.m_vsh->m_vertexShader);
@@ -3591,7 +3611,7 @@ namespace bgfx { namespace d3d9
 
 	bool TimerQueryD3D9::update()
 	{
-		if (0 != m_control.available() )
+		if (0 != m_control.getNumUsed() )
 		{
 			Query& query = m_query[m_control.m_read];
 
@@ -3601,7 +3621,7 @@ namespace bgfx { namespace d3d9
 			}
 
 			uint64_t timeEnd;
-			const bool flush = BX_COUNTOF(m_query)-1 == m_control.available();
+			const bool flush = BX_COUNTOF(m_query)-1 == m_control.getNumUsed();
 			HRESULT hr = query.m_end->GetData(&timeEnd, sizeof(timeEnd), flush ? D3DGETDATA_FLUSH : 0);
 			if (S_OK == hr
 			||  isLost(hr) )
@@ -3670,7 +3690,7 @@ namespace bgfx { namespace d3d9
 
 	void OcclusionQueryD3D9::resolve(Frame* _render, bool)
 	{
-		while (0 != m_control.available() )
+		while (0 != m_control.getNumUsed() )
 		{
 			Query& query = m_query[m_control.m_read];
 
@@ -3694,7 +3714,7 @@ namespace bgfx { namespace d3d9
 	{
 		const uint32_t size = m_control.m_size;
 
-		for (uint32_t ii = 0, num = m_control.available(); ii < num; ++ii)
+		for (uint32_t ii = 0, num = m_control.getNumUsed(); ii < num; ++ii)
 		{
 			Query& query = m_query[(m_control.m_read + ii) % size];
 			if (query.m_handle.idx == _handle.idx)
@@ -4070,7 +4090,10 @@ namespace bgfx { namespace d3d9
 
 					if ( (BGFX_STATE_PT_POINTS|BGFX_STATE_POINT_SIZE_MASK) & changedFlags)
 					{
-						DX_CHECK(device->SetRenderState(D3DRS_POINTSIZE, castfu( (float)( (newFlags&BGFX_STATE_POINT_SIZE_MASK)>>BGFX_STATE_POINT_SIZE_SHIFT) ) ) );
+						const float pointSize = (float)( (newFlags&BGFX_STATE_POINT_SIZE_MASK)>>BGFX_STATE_POINT_SIZE_SHIFT);
+						DWORD pointSizeDw;
+						bx::memCopy(&pointSizeDw, &pointSize, sizeof(DWORD) );
+						DX_CHECK(device->SetRenderState(D3DRS_POINTSIZE, pointSizeDw) );
 					}
 
 					if (BGFX_STATE_MSAA & changedFlags)
@@ -4548,7 +4571,7 @@ namespace bgfx { namespace d3d9
 				tvm.printf(10, pos++, 0x8b, "     DIB size: %7d ", _render->m_iboffset);
 
 				pos++;
-				tvm.printf(10, pos++, 0x8b, " Occlusion queries: %3d ", m_occlusionQuery.m_control.available() );
+				tvm.printf(10, pos++, 0x8b, " Occlusion queries: %3d ", m_occlusionQuery.m_control.getNumUsed() );
 
 				pos++;
 				tvm.printf(10, pos++, 0x8b, " State cache: ");
@@ -4571,7 +4594,7 @@ namespace bgfx { namespace d3d9
 				max = frameTime;
 			}
 
-			blit(this, _textVideoMemBlitter, tvm);
+			dbgTextSubmit(this, _textVideoMemBlitter, tvm);
 
 			BGFX_D3D9_PROFILER_END();
 		}
@@ -4579,7 +4602,7 @@ namespace bgfx { namespace d3d9
 		{
 			BGFX_D3D9_PROFILER_BEGIN_LITERAL("debugtext", kColorFrame);
 
-			blit(this, _textVideoMemBlitter, _render->m_textVideoMem);
+			dbgTextSubmit(this, _textVideoMemBlitter, _render->m_textVideoMem);
 
 			BGFX_D3D9_PROFILER_END();
 		}

@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2023 Branimir Karadzic. All rights reserved.
+ * Copyright 2011-2026 Branimir Karadzic. All rights reserved.
  * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
  */
 
@@ -68,11 +68,15 @@ public:
 	static void remapIndices(uint32_t* _indices, uint32_t _num)
 	{
 		uint32_t target = 0;
-		for (uint32_t i = 0; i < _num; i++) {
+		for (uint32_t i = 0; i < _num; i++)
+		{
 			uint32_t map = _indices[i];
-			if (i != map) {
+			if (i != map)
+			{
 				_indices[i] = _indices[map];
-			} else {
+			}
+			else
+			{
 				_indices[i] = target;
 				++target;
 			}
@@ -264,7 +268,7 @@ public:
 		init.vendorId = args.m_pciId;
 		init.platformData.nwh  = entry::getNativeWindowHandle(entry::kDefaultWindowHandle);
 		init.platformData.ndt  = entry::getNativeDisplayHandle();
-		init.platformData.type = entry::getNativeWindowHandleType(entry::kDefaultWindowHandle);
+		init.platformData.type = entry::getNativeWindowHandleType();
 		init.resolution.width  = m_width;
 		init.resolution.height = m_height;
 		init.resolution.reset  = m_reset;
@@ -281,8 +285,6 @@ public:
 			, 0
 			);
 
-		u_tint = bgfx::createUniform("u_tint", bgfx::UniformType::Vec4);
-
 		// Create program from shaders.
 		m_program = loadProgram("vs_bunnylod", "fs_bunnylod");
 
@@ -290,11 +292,12 @@ public:
 		loadMesh(mesh);
 		meshUnload(mesh);
 
-		m_timeOffset = bx::getHPCounter();
 		m_LOD = 1.0f;
 		m_lastLOD = m_LOD;
 
 		imguiCreate();
+
+		m_frameTime.reset();
 	}
 
 	int shutdown() override
@@ -305,7 +308,6 @@ public:
 		bgfx::destroy(m_program);
 		bgfx::destroy(m_vb);
 		bgfx::destroy(m_ib);
-		bgfx::destroy(u_tint);
 
 		bx::free(entry::getAllocator(), m_map);
 		bx::free(entry::getAllocator(), m_triangle);
@@ -386,6 +388,9 @@ public:
 	{
 		if (!entry::processEvents(m_width, m_height, m_debug, m_reset, &m_mouseState) )
 		{
+			m_frameTime.frame();
+			const float time = bx::toSeconds<float>(m_frameTime.getDurationTime() );
+
 			imguiBeginFrame(m_mouseState.m_mx
 				,  m_mouseState.m_my
 				, (m_mouseState.m_buttons[entry::MouseButton::Left  ] ? IMGUI_MBUT_LEFT   : 0)
@@ -426,10 +431,6 @@ public:
 			// This dummy draw call is here to make sure that view 0 is cleared
 			// if no other draw calls are submitted to view 0.
 			bgfx::touch(0);
-
-			float time = (float)( (bx::getHPCounter()-m_timeOffset)/double(bx::getHPFrequency() ) );
-			const float BasicColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
-			bgfx::setUniform(u_tint, BasicColor);
 
 			const bx::Vec3 at  = { 0.0f, 1.0f,  0.0f };
 			const bx::Vec3 eye = { 0.0f, 1.0f, -2.5f };
@@ -485,11 +486,11 @@ public:
 	uint32_t* m_cacheWeld;
 	uint32_t* m_cachePermutation;
 
-	int64_t m_timeOffset;
 	bgfx::VertexBufferHandle m_vb;
 	bgfx::DynamicIndexBufferHandle m_ib;
 	bgfx::ProgramHandle m_program;
-	bgfx::UniformHandle u_tint;
+
+	FrameTime m_frameTime;
 };
 
 } // namespace

@@ -36,9 +36,9 @@
 
 namespace {
 
-#define FRAMEBUFFER_RT_COLOR		0
-#define FRAMEBUFFER_RT_DEPTH		1
-#define FRAMEBUFFER_RENDER_TARGETS	2
+#define FRAMEBUFFER_RT_COLOR       0
+#define FRAMEBUFFER_RT_DEPTH       1
+#define FRAMEBUFFER_RENDER_TARGETS 2
 
 enum Meshes
 {
@@ -247,7 +247,7 @@ public:
 		init.vendorId = args.m_pciId;
 		init.platformData.nwh  = entry::getNativeWindowHandle(entry::kDefaultWindowHandle);
 		init.platformData.ndt  = entry::getNativeDisplayHandle();
-		init.platformData.type = entry::getNativeWindowHandleType(entry::kDefaultWindowHandle);
+		init.platformData.type = entry::getNativeWindowHandleType();
 		init.resolution.width  = m_width;
 		init.resolution.height = m_height;
 		init.resolution.reset  = m_reset;
@@ -312,6 +312,8 @@ public:
 		updateDisplayBokehTexture(m_radiusScale, m_maxBlurSize, m_lobeCount, (1.0f-m_lobePinch), 1.0f, m_lobeRotation);
 
 		imguiCreate();
+
+		m_frameTime.reset();
 	}
 
 	int32_t shutdown() override
@@ -360,19 +362,15 @@ public:
 	{
 		if (!entry::processEvents(m_width, m_height, m_debug, m_reset, &m_mouseState))
 		{
+			m_frameTime.frame();
+			const float deltaTime = bx::toSeconds<float>(m_frameTime.getDeltaTime() );
+
 			// skip processing when minimized, otherwise crashing
 			if (0 == m_width || 0 == m_height)
 			{
 				return true;
 			}
 
-			// Update frame timer
-			int64_t now = bx::getHPCounter();
-			static int64_t last = now;
-			const int64_t frameTime = now - last;
-			last = now;
-			const double freq = double(bx::getHPFrequency());
-			const float deltaTime = float(frameTime / freq);
 			const bgfx::Caps* caps = bgfx::getCaps();
 
 			if (m_size[0] != (int32_t)m_width
@@ -1045,6 +1043,8 @@ public:
 	float m_lobePinch = 0.2f;
 	float m_lobeRotation = 0.0f;
 	int32_t m_sampleCount = 0;
+
+	FrameTime m_frameTime;
 };
 
 } // namespace

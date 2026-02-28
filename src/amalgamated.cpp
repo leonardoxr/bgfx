@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2023 Branimir Karadzic. All rights reserved.
+ * Copyright 2011-2026 Branimir Karadzic. All rights reserved.
  * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
  */
 
@@ -11,9 +11,9 @@
 #include "glcontext_html5.cpp"
 #include "nvapi.cpp"
 #include "renderer_agc.cpp"
+#include "renderer_d3d9.cpp"
 #include "renderer_d3d11.cpp"
 #include "renderer_d3d12.cpp"
-#include "renderer_d3d9.cpp"
 #include "renderer_gl.cpp"
 #include "renderer_gnm.cpp"
 #include "renderer_noop.cpp"
