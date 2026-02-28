@@ -871,6 +871,27 @@ namespace bgfx { namespace d3d9
 				g_caps.formats[ii] = support;
 			}
 
+			switch (adapterFormat)
+			{
+			case D3DFMT_X8R8G8B8:
+			case D3DFMT_A8R8G8B8:
+				g_caps.formats[TextureFormat::BGRA8] |= BGFX_CAPS_FORMAT_TEXTURE_BACKBUFFER;
+				break;
+
+			case D3DFMT_R5G6B5:
+				g_caps.formats[TextureFormat::B5G6R5] |= BGFX_CAPS_FORMAT_TEXTURE_BACKBUFFER;
+				g_caps.formats[TextureFormat::R5G6B5] |= BGFX_CAPS_FORMAT_TEXTURE_BACKBUFFER;
+				break;
+
+			case D3DFMT_A2R10G10B10:
+				g_caps.formats[TextureFormat::RGB10A2] |= BGFX_CAPS_FORMAT_TEXTURE_BACKBUFFER;
+				break;
+
+			default:
+				g_caps.formats[TextureFormat::BGRA8] |= BGFX_CAPS_FORMAT_TEXTURE_BACKBUFFER;
+				break;
+			}
+
 			m_fmtDepth = D3DFMT_D24S8;
 
 			{
@@ -1296,6 +1317,7 @@ namespace bgfx { namespace d3d9
 				, params.BackBufferWidth
 				, params.BackBufferHeight
 				, rect.Pitch
+				, TextureFormat::BGRA8
 				, &data[point.y*rect.Pitch+point.x*bytesPerPixel]
 				, params.BackBufferHeight*rect.Pitch
 				, false
